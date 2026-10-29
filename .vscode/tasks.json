@@ -1,0 +1,64 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run QueueFree frontend (backend on 8000)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev", "--", "--host", "127.0.0.1"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:"
+        }
+      }
+    },
+    {
+      "label": "Run QueueFree backend",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$ready = $false; try { $response = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/health/' -UseBasicParsing -TimeoutSec 2; $ready = $response.StatusCode -eq 200 } catch {}; if ($ready) { Write-Output 'Django API already running at http://127.0.0.1:8000/health/' } else { & '.\\.venv\\Scripts\\python.exe' 'backend\\manage.py' runserver '127.0.0.1:8000' }"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": ".",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Watching for file changes",
+          "endsPattern": "Starting development server at"
+        }
+      }
+    },
+    {
+      "label": "Run QueueFree website and backend",
+      "dependsOn": [
+        "Run QueueFree frontend (backend on 8000)",
+        "Run QueueFree backend"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+.shared-booking-panel,.patient-booking-card,.dashboard-login,.dashboard-queue,.dashboard-metrics article{background:var(--surface,#fff);border:1px solid var(--line,#e7edf2);border-radius:16px;box-shadow:var(--shadow,0 12px 34px rgba(28,50,72,.07))}
+.shared-booking-panel{padding:24px;margin-top:22px;animation:fade-up .36s both}
+.shared-booking-panel form{display:grid;gap:18px;margin-top:22px}
+.shared-booking-panel .form-grid{margin:0}
+.selected-listing-card,.selected-listing-note,.integration-notice,.payment-policy{display:flex;align-items:center;gap:12px;border-radius:12px;padding:13px 15px}
+.selected-listing-card{margin:18px 0;background:#fff;border:1px solid var(--line);color:var(--teal-dark)}
+.selected-listing-card>span,.integration-notice>span,.payment-policy>span{display:flex;flex-direction:column;gap:4px;flex:1}
+.selected-listing-card small{font-size:9px;letter-spacing:1px;font-weight:700}
+.selected-listing-card strong{font-size:13px;color:var(--ink)}
+.selected-listing-card span span,.integration-notice small,.payment-policy small{font-size:11px;color:var(--muted);line-height:1.55}
+.selected-listing-note{margin-top:16px;background:#f4f8fb;color:#50657a;font-size:12px;line-height:1.5}
+.integration-notice{margin:0;background:#edf9f7;color:#078a7e}
+.integration-notice strong{font-size:12px;color:#087e76}
+.integration-b{background:#fff7e6;color:#9a6a13}
+.integration-b strong{color:#805b18}
+.integration-c{background:#edf5ff;color:#2670b8}
+.integration-c strong{color:#225d93}
+.external-booking-notice,.payment-policy{background:#fff7e6;border:1px solid #f2dfb6;border-radius:12px;padding:16px;color:#725721;font-size:12px;line-height:1.6}
+.external-booking-notice p{margin:0 0 12px}
+.payment-policy{display:flex;align-items:flex-start}
+.availability-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+.availability-message{padding:14px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:12px;margin:0}
+.api-slot-list{display:flex;flex-wrap:wrap;gap:8px}
+.api-slot{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface);font-size:12px;cursor:pointer}
+.api-slot input{accent-color:var(--teal-dark)}
+.api-slot small{font-size:10px;color:var(--muted)}
+.api-slot.selected{border-color:var(--teal);background:#effbf9}
+.api-slot.unavailable{opacity:.55;cursor:not-allowed}
+.api-doctor-note,.booking-location-footnote{font-size:11px;line-height:1.6;color:var(--muted)}
+.api-error,.api-success{padding:12px 15px;border-radius:10px;font-size:12px;line-height:1.5;margin:16px 0}
+.api-error{background:#fff0ee;color:#a33d32;border:1px solid #f4d0ca}
+.api-success{background:#ecf9f4;color:#087e58;border:1px solid #ccebdd}
+.patient-booking-list{display:grid;gap:16px;margin-top:24px}
+.patient-booking-card{padding:20px;animation:fade-up .3s both}
+.patient-booking-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.patient-booking-top .integration-notice{padding:7px 10px;font-size:10px}
+.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#edf1f5;color:#536273;font-size:10px;font-style:normal;font-weight:700;text-transform:capitalize}
+.status-waiting,.status-arrived{background:#e8f7f4;color:#087e76}
+.status-serving{background:#eaf2ff;color:#285ba6}
+.status-completed{background:#edf8ec;color:#39733a}
+.status-cancelled,.status-missed,.status-skipped{background:#fff0ee;color:#a33d32}
+.patient-token-number{font:800 28px Manrope,sans-serif;letter-spacing:-.8px;color:var(--teal-dark);margin:16px 0 3px}
+.patient-booking-card h2{font:700 16px Manrope,sans-serif;margin:0 0 5px}
+.patient-booking-card>p{font-size:12px;color:var(--muted);margin:0}
+.booking-facts{display:flex;flex-wrap:wrap;gap:10px 20px;margin:17px 0}
+.booking-facts span{display:inline-flex;align-items:center;gap:6px;color:#566677;font-size:11px}
+.payment-state{font-size:11px;color:#586b7a;padding-top:12px;border-top:1px solid var(--line)}
+.payment-state small{color:#aa791b}
+.payment-state span{color:#087e58}
+.patient-booking-actions,.dashboard-actions,.dashboard-row-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:15px}
+.cancel-token{color:#a33d32;background:#fff0ee;border:1px solid #f4d0ca;border-radius:9px;padding:9px 12px;font-size:11px;font-weight:700}
+.cancel-token:disabled{opacity:.6;cursor:wait}
+.reschedule-panel{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:10px;padding:15px;margin-top:14px;background:#f6fafb;border-radius:12px}
+.reschedule-panel .primary-btn{height:42px}
+.dashboard-page{min-height:100vh;background:#f5f8fb;color:#142136}
+.dashboard-topbar{min-height:68px;padding:12px max(24px,calc((100vw - 1120px)/2));background:#fff;border-bottom:1px solid #e7edf2;display:flex;align-items:center;gap:22px}
+.dashboard-topbar .brand{margin-right:auto}
+.dashboard-demo-badge{font-size:9px;letter-spacing:1px;font-weight:800;color:#087e76;background:#e8f7f4;border-radius:99px;padding:8px 11px}
+.dashboard-content{max-width:1060px;margin:0 auto;padding:42px 24px 80px}
+.dashboard-login{max-width:480px;margin:48px auto;padding:30px}
+.dashboard-login h1,.dashboard-heading h1{font:800 28px Manrope,sans-serif;letter-spacing:-.8px;margin:9px 0}
+.dashboard-login>p,.dashboard-heading p{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 20px}
+.dashboard-login form{display:grid;gap:14px}
+.dashboard-login>small{display:block;color:var(--muted);font-size:10px;line-height:1.6;margin-top:15px}
+.dashboard-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.dashboard-heading p{margin-bottom:0}
+.dashboard-controls{display:flex;align-items:end;gap:15px;margin:24px 0 16px}
+.dashboard-controls .form-field{max-width:220px}
+.polling-note{display:flex;align-items:center;gap:8px;margin:0 0 14px auto;font-size:10px;color:#5a7182}
+.dashboard-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.dashboard-metrics article{padding:16px 18px;display:grid;gap:8px}
+.dashboard-metrics small{font-size:9px;font-weight:800;letter-spacing:.8px;color:var(--muted)}
+.dashboard-metrics strong{font:800 23px Manrope,sans-serif}
+.dashboard-queue{margin-top:22px;padding:20px}
+.dashboard-queue-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.dashboard-queue-heading h2{font:700 17px Manrope,sans-serif;margin:0}
+.dashboard-queue-heading span{font-size:10px;color:var(--muted)}
+.dashboard-booking-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.dashboard-token{min-width:76px;font:800 14px Manrope,sans-serif;color:var(--teal-dark)}
+.dashboard-booking-main{display:grid;gap:4px;flex:1}
+.dashboard-booking-main strong{font-size:12px}
+.dashboard-booking-main span,.dashboard-booking-main small{font-size:10px;color:var(--muted)}
+.dashboard-row-actions{margin:0}
+.dashboard-row-actions button{padding:7px 9px;font-size:10px;min-height:32px}
+.empty-dashboard{display:grid;justify-items:center;gap:9px;padding:45px 20px;text-align:center;color:var(--muted)}
+.empty-dashboard strong{font-size:13px;color:var(--ink)}
+.empty-dashboard span{font-size:11px}
+.dark .shared-booking-panel,.dark .patient-booking-card,.dark .dashboard-queue,.dark .dashboard-metrics article{background:#182537;border-color:#263648}
+.dark .selected-listing-card{background:#182537;border-color:#263648}
+.dark .selected-listing-note,.dark .reschedule-panel{background:#202f40}
+.dark .patient-booking-card h2,.dark .selected-listing-card strong{color:#e8eef4}
+.dark .booking-facts span,.dark .payment-state,.dark .dashboard-booking-main strong{color:#bac6d2}
+.dark .api-slot{background:#182537;color:#e8eef4}
+.dark .api-slot.selected{background:#143c3a}
+.dark .dashboard-page{background:#101b2a;color:#e8eef4}
+.dark .dashboard-topbar,.dark .dashboard-login{background:#182537;border-color:#263648}
+@media(max-width:720px){.dashboard-content{padding:28px 15px 55px}.dashboard-topbar{padding:11px 15px;gap:10px}.dashboard-demo-badge{font-size:8px}.dashboard-heading{align-items:flex-start}.dashboard-heading h1,.dashboard-login h1{font-size:23px}.dashboard-metrics{gap:7px}.dashboard-metrics article{padding:12px}.dashboard-metrics small{font-size:8px}.dashboard-metrics strong{font-size:19px}.dashboard-booking-row{align-items:flex-start;flex-wrap:wrap;gap:9px}.dashboard-booking-main{min-width:60%;}.dashboard-row-actions{width:100%;margin-left:86px}.dashboard-queue{padding:15px}.reschedule-panel{grid-template-columns:1fr}.dashboard-controls{align-items:flex-start;flex-wrap:wrap}.polling-note{margin-left:0}.shared-booking-panel{padding:16px}.selected-listing-card{align-items:flex-start;flex-wrap:wrap}.selected-listing-card .text-button{margin-left:28px}.booking-facts{display:grid;gap:9px}}
+@media(prefers-reduced-motion:reduce){.shared-booking-panel,.patient-booking-card{animation:none!important;scroll-behavior:auto!important;transition:none!important}}

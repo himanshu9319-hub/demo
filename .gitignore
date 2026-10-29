@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env.local
+.env.*.local
+.venv/
+backend/.env
+backend/db.sqlite3
+__pycache__/
+*.py[cod]
