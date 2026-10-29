@@ -88,12 +88,17 @@ src/
     appData.js             Sample hospital data, queue helpers, and distance math
     queueApi.js            Versioned API client and in-memory JWT session
   styles.css               Tailwind import and shared responsive styles
+  ui-refresh.css           Shared palette tokens and responsive premium UI styling
 backend/
   queuefree_backend/       Django settings, URLs, ASGI/WSGI
   queue_api/               Models, permissions, serializers, API, seed command, and tests
 ```
 
 The project uses Vite with React and Tailwind CSS. Add a page in `src/components/pages/`, then connect it from the tab switch in `src/App.jsx`.
+
+## Visual design system
+
+The shared palette is defined in `src/ui-refresh.css` as CSS custom properties: deep blue-gray `#2F4454`, dark burgundy `#2E151B`, dusty rose `#DA7B93`, muted teal `#376E6F`, and forest teal `#1C3334`. Patient, staff, authentication, booking, and queue surfaces reuse these tokens; success, pending, warning, and error states keep distinct semantic treatments. The location/map components and their provider behavior are unchanged.
 
 ## Hospital location maps
 
