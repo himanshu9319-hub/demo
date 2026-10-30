@@ -35,8 +35,8 @@ In another terminal, run the frontend. For SQLite-only local tests, leave `DATAB
 
 Set `DEMO_SEED_PASSWORD` before running the seeder. The seeded staff usernames are:
 
-- Reception: `reception-demo`
-- Doctor: `doctor-demo`
+- Reception: `reception.demo`
+- Doctor: `doctor.demo`
 - Demo password: the value you set in `DEMO_SEED_PASSWORD` (use a unique value outside local development)
 
 Patients use the simulated ABHA-style ID/OTP dialog. The ID and one-time code are fake demo values; this is not ABDM authentication. Never use a real ABHA ID. Demo sign-in also requires a phone number in international format and explicit consent for WhatsApp queue notifications. The number and consent timestamp are stored on the demo patient profile; no WhatsApp messages are sent because no messaging service is configured.

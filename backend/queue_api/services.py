@@ -8,6 +8,7 @@ from django.utils import timezone
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 
 from .adapters import adapter_for
+from .refund_policy import refund_percentage
 from .models import AppointmentSlot, AuditLog, Booking, Hospital, Payment, PatientProfile, QueueControl, Refund, StaffProfile
 
 
@@ -182,19 +183,8 @@ def cancel_booking(booking, patient, reason, actor):
     if booking.authoritative_external:
         raise Conflict("This hospital owns the booking. Contact its booking service to cancel; QueueFree did not allocate the token.")
 
-    policy = booking.hospital.cancellation_policy
-    if reason == "doctor_unavailable":
-        percentage = int(policy.get("doctor_unavailable", 100))
-    elif reason == "duplicate_payment":
-        percentage = int(policy.get("duplicate_payment", 100))
-    else:
-        hours = (datetime.combine(booking.appointment_date, booking.slot.start_time, tzinfo=timezone.get_current_timezone()) - timezone.now()).total_seconds() / 3600
-        if hours > 24:
-            percentage = int(policy.get("more_than_24_hours", 100))
-        elif hours >= 6:
-            percentage = int(policy.get("between_6_and_24_hours", 75))
-        else:
-            percentage = int(policy.get("less_than_6_hours", 50))
+    hours = (datetime.combine(booking.appointment_date, booking.slot.start_time, tzinfo=timezone.get_current_timezone()) - timezone.now()).total_seconds() / 3600
+    percentage = refund_percentage(booking.hospital.cancellation_policy, reason, hours)
 
     booking.status = Booking.Status.CANCELLED
     booking.save(update_fields=["status", "updated_at"])
