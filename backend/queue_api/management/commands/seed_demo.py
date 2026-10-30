@@ -15,6 +15,10 @@ class Command(BaseCommand):
     help = "Create clearly labeled QueueFree demo hospitals, users, doctors, and appointment slots."
 
     def handle(self, *args, **options):
+        from django.conf import settings
+
+        if not settings.DEBUG and os.environ.get("ALLOW_DEMO_ACCOUNTS", "").lower() != "true":
+            raise CommandError("Demo staff accounts are disabled outside DEBUG. Set ALLOW_DEMO_ACCOUNTS=true only for a demo deployment.")
         password = os.environ.get("DEMO_SEED_PASSWORD")
         if not password or len(password) < 12:
             raise CommandError("Set DEMO_SEED_PASSWORD to a value of at least 12 characters before seeding.")
@@ -65,9 +69,11 @@ class Command(BaseCommand):
                             defaults={"capacity": 1 if mode == Hospital.IntegrationType.QUEUEFREE else 3},
                         )
 
-        self._create_staff("reception-demo", "Reception Demo", Hospital.objects.get(name=specs[2][0]), StaffProfile.Role.RECEPTION, password)
+        reception_password = os.environ.get("DEMO_RECEPTION_PASSWORD") or password
+        doctor_password = os.environ.get("DEMO_DOCTOR_PASSWORD") or password
+        self._create_staff("reception.demo", "Reception Demo", Hospital.objects.get(name=specs[2][0]), StaffProfile.Role.RECEPTION, reception_password)
         doctor = Doctor.objects.filter(department__hospital__name=specs[2][0]).order_by("pk").first()
-        self._create_staff("doctor-demo", "Doctor Demo", doctor.department.hospital, StaffProfile.Role.DOCTOR, password, doctor)
+        self._create_staff("doctor.demo", "Doctor Demo", doctor.department.hospital, StaffProfile.Role.DOCTOR, doctor_password, doctor)
         patient_user, _ = User.objects.get_or_create(username="patient-demo")
         patient_user.set_password(password)
         patient_user.save()
