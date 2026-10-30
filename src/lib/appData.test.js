@@ -1,6 +1,6 @@
 // Runtime validation coverage for hospital data and queue helpers.
 import { describe, expect, it } from 'vitest'
-import { distanceKm, doctorsByDept, hospitalKey, initialHospitals, navItems, opdKey } from './appData.js'
+import { createDoctorDirectory, distanceKm, doctorsByDept, hospitalKey, initialHospitals, navItems, opdKey } from './appData.js'
 
 describe('hospital and queue helpers', () => {
   it('provides location data and stable keys for sample hospitals', () => {
@@ -14,6 +14,20 @@ describe('hospital and queue helpers', () => {
     expect(navItems).toHaveLength(5)
     expect(navItems.every(item => item.icon)).toBe(true)
     expect(doctorsByDept.Cardiology).toContain('Dr. Neha Shah')
+  })
+
+  it('generates selectable demo profiles with bounded metrics for every doctor', () => {
+    const directory = createDoctorDirectory(() => 0.5)
+    expect(directory).toHaveLength(Object.values(doctorsByDept).flat().length)
+    expect(directory.find(doctor => doctor.name === 'Dr. Neha Shah')).toMatchObject({
+      department: 'Cardiology',
+      experienceYears: 15,
+      rating: 4.6,
+      patientsToday: 17,
+      availableSlots: 4,
+      averageMinutes: 18,
+    })
+    expect(directory.every(doctor => doctor.id === `${doctor.department}::${doctor.name}`)).toBe(true)
   })
 
   it('calculates zero distance for identical coordinates', () => {

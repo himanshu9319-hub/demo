@@ -37,6 +37,19 @@ export const doctorsByDept = {
   Pediatrics: ['Dr. Maya Joshi', 'Dr. Vivek Rao'],
 }
 
+export function createDoctorDirectory(random = Math.random) {
+  return Object.entries(doctorsByDept).flatMap(([department, doctors]) => doctors.map(name => ({
+    id: `${department}::${name}`,
+    name,
+    department,
+    experienceYears: 5 + Math.floor(random() * 20),
+    rating: Number((4.3 + random() * 0.7).toFixed(1)),
+    patientsToday: 8 + Math.floor(random() * 19),
+    availableSlots: 1 + Math.floor(random() * 7),
+    averageMinutes: 10 + Math.floor(random() * 16),
+  })))
+}
+
 export const navItems = [
   { id: 'home', label: 'Home', icon: HeartPulse },
   { id: 'book', label: 'Book', icon: Ticket },

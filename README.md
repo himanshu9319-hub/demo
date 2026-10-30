@@ -48,6 +48,7 @@ City suggestions and nearby hospital listings use the public Photon geocoding/se
 ## Demo flows
 
 - Patient booking and queue screens use the shared API; the API/database is the source of truth, not browser localStorage. Reception and doctor dashboards are available at `/reception` and `/doctor`; they poll the authenticated, hospital-scoped API every five seconds.
+- The in-app Reception console also includes fictional, generated doctor profile metrics for browsing by department and doctor. Those demo values persist in this browser and are separate from shared API bookings and real availability.
 - Seeded facilities demonstrate Type A (simulated hospital API adapter), Type B (demo website placeholder; no QueueFree confirmation), and Type C (QueueFree-managed token allocation). No seeded facility is a real hospital integration.
 - Type C allocation is transactional, row-locked on PostgreSQL, and protected by database constraints and an idempotency key. Type A demo reservations are delegated to the adapter and are not represented as a real hospital booking. A Type B booking opens only the configured website URL and never creates a token.
 - Required payments are explicitly simulated by the demo provider when `DEMO_PAYMENTS_ENABLED=true`; no real payment is collected. Refund percentages come from each hospital's policy. Configure a real payment adapter before claiming payments are live.

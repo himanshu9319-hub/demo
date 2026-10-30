@@ -11,11 +11,14 @@ import { BookingPage } from './components/pages/BookingPage'
 import { QueuePage } from './components/pages/QueuePage'
 import { StaffPage } from './components/pages/StaffPage'
 import { HospitalDashboard } from './components/dashboards/HospitalDashboard'
-import { initialHospitals, departments, doctorsByDept, hospitalKey, opdKey, loadJson, persistJson, PHOTON_API, distanceKm } from './lib/appData'
+import { initialHospitals, departments, doctorsByDept, createDoctorDirectory, hospitalKey, opdKey, loadJson, persistJson, PHOTON_API, distanceKm } from './lib/appData'
 import { getResults, patientDemoLogin, setApiAccessToken } from './lib/queueApi'
 
 function App() {
-  const [tab, setTab] = useState('home'), [city, setCity] = useState('Dehradun'), [cityCenter, setCityCenter] = useState({ lat: 30.3255646, lon: 78.0436813 }), [citySelected, setCitySelected] = useState(true), [search, setSearch] = useState(''), [dark, setDark] = useState(false), [booking, setBooking] = useState(null), [token, setToken] = useState(() => loadJson('queuefree-token', null)), [toast, setToast] = useState(''), [locationAsked, setLocationAsked] = useState(false), [liveHospitals, setLiveHospitals] = useState([]), [hospitalLoading, setHospitalLoading] = useState(false), [hospitalError, setHospitalError] = useState(''), [queues, setQueues] = useState(() => loadJson('queuefree-queues', {})), [dept, setDept] = useState(departments[0]), [doctor, setDoctor] = useState(doctorsByDept[departments[0]][0]), [staffHospital, setStaffHospital] = useState(''), [staffDept, setStaffDept] = useState(departments[0]), [paused, setPaused] = useState(() => loadJson('queuefree-paused', {})), [avgMinutes, setAvgMinutes] = useState(() => loadJson('queuefree-average', {})), [delayMinutes, setDelayMinutes] = useState(() => loadJson('queuefree-delay', {})), [citySuggestions, setCitySuggestions] = useState([]), [authOpen, setAuthOpen] = useState(false), [authStep, setAuthStep] = useState(0), [demoAbha, setDemoAbha] = useState(''), [abhaInput, setAbhaInput] = useState(''), [otp, setOtp] = useState(''), [otpCode, setOtpCode] = useState(''), [otpAttempts, setOtpAttempts] = useState(0), [otpExpires, setOtpExpires] = useState(0), [verified, setVerified] = useState(false), [phoneNumber, setPhoneNumber] = useState(''), [whatsappConsent, setWhatsappConsent] = useState(false), [authLoading, setAuthLoading] = useState(false), [authError, setAuthError] = useState(''), [language, setLanguage] = useState('en'), [apiAccessToken, setApiAccessTokenState] = useState(''), [apiBookings, setApiBookings] = useState([]), [apiError, setApiError] = useState('')
+  const [tab, setTab] = useState('home'), [city, setCity] = useState('Dehradun'), [cityCenter, setCityCenter] = useState({ lat: 30.3255646, lon: 78.0436813 }), [citySelected, setCitySelected] = useState(true), [search, setSearch] = useState(''), [dark, setDark] = useState(false), [booking, setBooking] = useState(null), [token, setToken] = useState(() => loadJson('queuefree-token', null)), [toast, setToast] = useState(''), [locationAsked, setLocationAsked] = useState(false), [liveHospitals, setLiveHospitals] = useState([]), [hospitalLoading, setHospitalLoading] = useState(false), [hospitalError, setHospitalError] = useState(''), [queues, setQueues] = useState(() => loadJson('queuefree-queues', {})), [dept, setDept] = useState(departments[0]), [doctor, setDoctor] = useState(doctorsByDept[departments[0]][0]), [staffHospital, setStaffHospital] = useState(''), [staffDept, setStaffDept] = useState(departments[0]), [staffDoctor, setStaffDoctor] = useState(doctorsByDept[departments[0]][0]), [doctorDirectory, setDoctorDirectory] = useState(() => {
+    const saved = loadJson('queuefree-doctor-directory', null)
+    return Array.isArray(saved) && saved.length ? saved : createDoctorDirectory()
+  }), [paused, setPaused] = useState(() => loadJson('queuefree-paused', {})), [avgMinutes, setAvgMinutes] = useState(() => loadJson('queuefree-average', {})), [delayMinutes, setDelayMinutes] = useState(() => loadJson('queuefree-delay', {})), [citySuggestions, setCitySuggestions] = useState([]), [authOpen, setAuthOpen] = useState(false), [authStep, setAuthStep] = useState(0), [demoAbha, setDemoAbha] = useState(''), [abhaInput, setAbhaInput] = useState(''), [otp, setOtp] = useState(''), [otpCode, setOtpCode] = useState(''), [otpAttempts, setOtpAttempts] = useState(0), [otpExpires, setOtpExpires] = useState(0), [verified, setVerified] = useState(false), [phoneNumber, setPhoneNumber] = useState(''), [whatsappConsent, setWhatsappConsent] = useState(false), [authLoading, setAuthLoading] = useState(false), [authError, setAuthError] = useState(''), [language, setLanguage] = useState('en'), [apiAccessToken, setApiAccessTokenState] = useState(''), [apiBookings, setApiBookings] = useState([]), [apiError, setApiError] = useState('')
   const bookingLock = useRef(false)
   const [locationHospital, setLocationHospital] = useState(null)
   const closeAuth = useCallback(() => {
@@ -39,6 +42,7 @@ function App() {
   const staffOptions = [...new Map(allHospitals.map(h => [hospitalKey(h), h])).values()]
 
   useEffect(() => persistJson('queuefree-queues', queues), [queues])
+  useEffect(() => persistJson('queuefree-doctor-directory', doctorDirectory), [doctorDirectory])
   useEffect(() => persistJson('queuefree-paused', paused), [paused])
   useEffect(() => persistJson('queuefree-average', avgMinutes), [avgMinutes])
   useEffect(() => persistJson('queuefree-delay', delayMinutes), [delayMinutes])
@@ -46,6 +50,10 @@ function App() {
   useEffect(() => {
     const sync = e => {
       if (e.key === 'queuefree-queues' && e.newValue) setQueues(loadJson('queuefree-queues', {}))
+      if (e.key === 'queuefree-doctor-directory' && e.newValue) {
+        const directory = loadJson('queuefree-doctor-directory', null)
+        setDoctorDirectory(Array.isArray(directory) && directory.length ? directory : createDoctorDirectory())
+      }
       if (e.key === 'queuefree-token') setToken(loadJson('queuefree-token', null))
       if (e.key === 'queuefree-paused') setPaused(loadJson('queuefree-paused', {}))
       if (e.key === 'queuefree-average') setAvgMinutes(loadJson('queuefree-average', {}))
@@ -236,7 +244,7 @@ function App() {
     setTab('queue')
     await refreshPatientBookings()
   }
-  const pageProps = { labels, token, activeQueue, ahead, estimated, goTo, city, cityCenter, citySelected, useLocation, onViewLocation: openHospitalLocation, hospitalForToken, queueLengthForHospital, search, setSearch, citySuggestions, setCity, setCityCenter, setCitySelected, setCitySuggestions, setLiveHospitals, setHospitalError, hospitals, hospitalLoading, hospitalError, booking, initialHospitals, setBooking, dept, setDept, doctor, setDoctor, doctorsByDept, departments, confirmBooking, queues, setQueues, setToken, setToast, staffTarget, staffHospitalKey, setStaffHospital, staffOptions, staffDept, setStaffDept, staffQueue, setAvgMinutes, avgMinutes, staffKey, delayMinutes, setDelayMinutes, paused, setPaused, updateQueue, bookHospital, apiMode: true, apiAuthenticated: Boolean(apiAccessToken), apiBookings, apiError, refreshPatientBookings, onApiBookingConfirmed }
+  const pageProps = { labels, token, activeQueue, ahead, estimated, goTo, city, cityCenter, citySelected, useLocation, onViewLocation: openHospitalLocation, hospitalForToken, queueLengthForHospital, search, setSearch, citySuggestions, setCity, setCityCenter, setCitySelected, setCitySuggestions, setLiveHospitals, setHospitalError, hospitals, hospitalLoading, hospitalError, booking, initialHospitals, setBooking, dept, setDept, doctor, setDoctor, doctorsByDept, departments, confirmBooking, queues, setQueues, setToken, setToast, staffTarget, staffHospitalKey, setStaffHospital, staffOptions, staffDept, setStaffDept, staffDoctor, setStaffDoctor, doctorDirectory, staffQueue, setAvgMinutes, avgMinutes, staffKey, delayMinutes, setDelayMinutes, paused, setPaused, updateQueue, bookHospital, apiMode: true, apiAuthenticated: Boolean(apiAccessToken), apiBookings, apiError, refreshPatientBookings, onApiBookingConfirmed }
 
   if (['/reception', '/hospital', '/doctor'].includes(window.location.pathname)) {
     return <HospitalDashboard role={window.location.pathname === '/doctor' ? 'doctor' : 'reception'} />
