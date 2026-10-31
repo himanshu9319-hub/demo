@@ -296,12 +296,7 @@ export function BookOpdStepper({
       errors.phone = 'Please enter a valid 10-digit mobile number.'
     }
 
-    // 8. Symptoms / Reason for Consultation validation
-    if (!patientReason.trim()) {
-      errors.reason = 'Chief Complaint / Symptoms are mandatory (e.g. fever, headache, allergy).'
-    } else if (patientReason.trim().length < 3) {
-      errors.reason = 'Please enter at least 3 characters describing symptoms or reason for visit.'
-    }
+    // 8. Symptoms / Reason for Consultation is OPTIONAL (as requested)
 
     // 9. Appointment Date validation
     if (!day) {
@@ -833,22 +828,20 @@ export function BookOpdStepper({
                         {fieldErrors.phone && <span className="field-error-msg">{fieldErrors.phone}</span>}
                       </div>
 
-                      {/* Symptoms / Chief Complaint (Mandatory) */}
+                      {/* Symptoms / Chief Complaint (Optional) */}
                       <div className="form-group">
                         <label htmlFor="booking-field-reason">
-                          Chief Complaint / Symptoms / Reason for Visit <span className="text-red-mandatory">*</span>
+                          Chief Complaint / Symptoms / Reason for Visit <span style={{ fontSize: 11.5, fontWeight: 500, color: '#64748b' }}>(Optional)</span>
                         </label>
                         <textarea
                           id="booking-field-reason"
                           rows={2}
-                          className={`styled-input ${fieldErrors.reason ? 'input-error-border' : ''}`}
+                          className="styled-input"
                           style={{ height: 'auto', minHeight: '74px', padding: '10px 14px', resize: 'vertical' }}
-                          placeholder="Describe symptoms or reason for visit (e.g. persistent fever, severe headache, skin allergy, routine checkup)..."
+                          placeholder="Describe symptoms or reason for visit (optional - e.g. fever, headache, routine checkup)..."
                           value={patientReason}
                           onChange={(e) => handlePatientFieldChange('reason', e.target.value)}
-                          required
                         />
-                        {fieldErrors.reason && <span className="field-error-msg">{fieldErrors.reason}</span>}
                       </div>
                     </div>
 
@@ -1002,7 +995,7 @@ export function BookOpdStepper({
                   <div className="summary-detail-row">
                     <span>Symptoms</span>
                     <strong>
-                      {patientReason ? (patientReason.length > 25 ? `${patientReason.slice(0, 25)}…` : patientReason) : <em style={{ color: '#94a3b8' }}>Required *</em>}
+                      {patientReason ? (patientReason.length > 25 ? `${patientReason.slice(0, 25)}…` : patientReason) : <em style={{ color: '#94a3b8' }}>Optional (None specified)</em>}
                     </strong>
                   </div>
                 </div>
@@ -1051,7 +1044,7 @@ export function BookOpdStepper({
               </div>
               <div className="summary-item">
                 <small>CHIEF COMPLAINT / SYMPTOMS</small>
-                <strong>{confirmedBooking?.chief_complaint || patientReason}</strong>
+                <strong>{confirmedBooking?.chief_complaint || patientReason || 'General OPD Consultation'}</strong>
               </div>
               <div className="summary-item">
                 <small>HOSPITAL & CITY</small>
