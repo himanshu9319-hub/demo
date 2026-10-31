@@ -12,6 +12,10 @@ npm run dev
 
 Copy `.env.example` to `.env.local` when the API is not at `http://127.0.0.1:8000/api/v1`. The frontend uses `VITE_API_URL`; `VITE_API_POLL_MS` controls dashboard refresh polling.
 
+### Local dashboard preview
+
+To inspect the Doctor and Reception dashboards without signing in, set `VITE_ENABLE_DASHBOARD_PREVIEW=true` in `.env.local` and run the Vite development server (`npm run dev`). The preview uses clearly labelled synthetic sample rows and local-only queue controls; it does not connect to the API or modify database records. This flag is honored only by Vite's non-production development server and is always disabled in builds. Remove the setting or set it to `false` to restore the normal staff login flow.
+
 ## Backend setup
 
 The backend runs with PostgreSQL when `DATABASE_URL` is a PostgreSQL URL. If `DATABASE_URL` is unset, it uses SQLite for local development and tests. Install PostgreSQL, create a database/user, then set the backend environment variables shown in `backend/.env.example`. The backend does not load `.env` files automatically; export the variables in your shell or use your deployment's secret/environment manager.
