@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   Building2, Stethoscope, Calendar, Clock, Check, ArrowRight, ArrowLeft,
-  ShieldCheck, AlertCircle, Sparkles, MapPin, Ticket, ExternalLink, RefreshCw, Star
+  ShieldCheck, AlertCircle, Sparkles, MapPin, Ticket, ExternalLink, RefreshCw, Star,
+  User, FileText, Phone, Activity
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiRequest, createBooking, getResults, localIsoDate, patientVerifyAbha } from '../../lib/queueApi'
@@ -16,6 +17,7 @@ export function BookOpdStepper({
   onAbhaVerifiedSuccess,
   city = 'Rishikesh, Uttarakhand',
   onNavigate,
+  patientSession = null,
 }) {
   const [step, setStep] = useState(1)
   const [hospitals, setHospitals] = useState([])
@@ -30,6 +32,20 @@ export function BookOpdStepper({
   const [loading, setLoading] = useState(false)
   const [bookingLoading, setBookingLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Mandatory Patient Details State
+  const [patientName, setPatientName] = useState(() => patientSession?.name || '')
+  const [patientAge, setPatientAge] = useState('')
+  const [patientGender, setPatientGender] = useState('')
+  const [patientPhone, setPatientPhone] = useState(() => patientSession?.phone || '')
+  const [patientReason, setPatientReason] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  // Sync patient session updates if available
+  useEffect(() => {
+    if (patientSession?.name && !patientName) setPatientName(patientSession.name)
+    if (patientSession?.phone && !patientPhone) setPatientPhone(patientSession.phone)
+  }, [patientSession])
 
   // Mandatory ABHA verification state
   const [showAbhaModal, setShowAbhaModal] = useState(false)
@@ -62,7 +78,6 @@ export function BookOpdStepper({
     getResults('/hospitals/').then(apiData => {
       if (!active) return
 
-      // Filter out ANY demo / test placeholder names from backend API
       const cleanApi = Array.isArray(apiData)
         ? apiData.filter(h => h.name && !h.name.toLowerCase().includes('demo') && !h.name.toLowerCase().includes('example'))
         : []
@@ -70,7 +85,6 @@ export function BookOpdStepper({
       const combined = []
       const seen = new Set()
 
-      // If user selected a hospital from Nearby or external, put it FIRST
       if (initialSelectedHospital?.name && !initialSelectedHospital.name.toLowerCase().includes('demo')) {
         combined.push(initialSelectedHospital)
         seen.add(initialSelectedHospital.name.toLowerCase())
@@ -121,7 +135,7 @@ export function BookOpdStepper({
     }
   }, [initialSelectedHospital, hospitals])
 
-  // Load all 25 OPD medical specialty departments
+  // Load all OPD medical specialty departments
   useEffect(() => {
     if (!hospitalId) return
     let active = true
@@ -192,18 +206,15 @@ export function BookOpdStepper({
     return () => { active = false }
   }, [doctorId, day])
 
-  // The exact hospital chosen by the user: strictly non-demo with full name and city
+  // Active chosen hospital
   const activeHospital = useMemo(() => {
-    // 1. Direct match by id or name
     const match = hospitals.find(h => (String(h.id) === String(hospitalId) || h.name === hospitalId) && !h.name.toLowerCase().includes('demo'))
     if (match) return match
 
-    // 2. Initial selected hospital if user selected from Nearby
     if (initialSelectedHospital?.name && !initialSelectedHospital.name.toLowerCase().includes('demo')) {
       return initialSelectedHospital
     }
 
-    // 3. First non-demo hospital in list
     const firstClean = hospitals.find(h => !h.name.toLowerCase().includes('demo'))
     return firstClean || defaultHospitals[0]
   }, [hospitals, hospitalId, initialSelectedHospital, defaultHospitals])
@@ -219,6 +230,95 @@ export function BookOpdStepper({
   const activeSlot = useMemo(() => {
     return slots.find(s => String(s.id) === slotId) || slots[0]
   }, [slots, slotId])
+
+  // Field change handler that automatically clears validation errors
+  const handlePatientFieldChange = (field, value) => {
+    if (field === 'name') setPatientName(value)
+    else if (field === 'age') setPatientAge(value)
+    else if (field === 'gender') setPatientGender(value)
+    else if (field === 'phone') setPatientPhone(value)
+    else if (field === 'reason') setPatientReason(value)
+
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const next = { ...prev }
+        delete next[field]
+        return next
+      })
+    }
+    if (error) setError('')
+  }
+
+  // Strict validation for all mandatory fields
+  const validateMandatoryDetails = () => {
+    const errors = {}
+
+    // 1. Hospital validation
+    if (!activeHospital?.name) {
+      errors.hospital = 'Hospital facility is mandatory.'
+    }
+
+    // 2. Department validation
+    if (!activeDepartment?.id) {
+      errors.department = 'OPD medical specialty department is mandatory.'
+    }
+
+    // 3. Consulting Doctor validation
+    if (!activeDoctor?.id) {
+      errors.doctor = 'Consulting doctor is mandatory.'
+    }
+
+    // 4. Patient Full Name validation
+    if (!patientName.trim()) {
+      errors.name = 'Patient Full Name is mandatory.'
+    } else if (patientName.trim().length < 2) {
+      errors.name = 'Patient Full Name must be at least 2 characters.'
+    }
+
+    // 5. Patient Age validation
+    const ageNum = parseInt(patientAge, 10)
+    if (!patientAge || isNaN(ageNum)) {
+      errors.age = 'Patient Age is mandatory.'
+    } else if (ageNum < 1 || ageNum > 120) {
+      errors.age = 'Please enter a valid age between 1 and 120 years.'
+    }
+
+    // 6. Patient Gender validation
+    if (!patientGender) {
+      errors.gender = 'Patient Gender is mandatory. Please select Male, Female, or Other.'
+    }
+
+    // 7. Contact Phone Number validation
+    const digitsOnly = patientPhone.replace(/\D/g, '')
+    if (!patientPhone.trim()) {
+      errors.phone = 'Contact Mobile Number is mandatory.'
+    } else if (digitsOnly.length < 10) {
+      errors.phone = 'Please enter a valid 10-digit mobile number.'
+    }
+
+    // 8. Symptoms / Reason for Consultation validation
+    if (!patientReason.trim()) {
+      errors.reason = 'Chief Complaint / Symptoms are mandatory (e.g. fever, headache, allergy).'
+    } else if (patientReason.trim().length < 3) {
+      errors.reason = 'Please enter at least 3 characters describing symptoms or reason for visit.'
+    }
+
+    // 9. Appointment Date validation
+    if (!day) {
+      errors.date = 'Appointment date is mandatory.'
+    }
+
+    // 10. Time Slot validation
+    if (!slotId) {
+      errors.slot = 'OPD queue time slot is mandatory.'
+    }
+
+    setFieldErrors(errors)
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+    }
+  }
 
   const handleGenerateDemoAbha = () => {
     const r1 = String(Math.floor(1000 + Math.random() * 9000))
@@ -263,6 +363,14 @@ export function BookOpdStepper({
   }
 
   const executeBooking = async () => {
+    // Re-verify that mandatory details are filled
+    const { isValid, errors } = validateMandatoryDetails()
+    if (!isValid) {
+      const firstError = Object.values(errors)[0]
+      setError(`Cannot book token: ${firstError} All mandatory fields marked with (*) must be completed.`)
+      return
+    }
+
     setBookingLoading(true)
     setError('')
     try {
@@ -272,6 +380,11 @@ export function BookOpdStepper({
         doctor_id: activeDoctor.id,
         date: day,
         slot_id: activeSlot?.id || 301,
+        patient_name: patientName.trim(),
+        patient_age: patientAge.trim(),
+        patient_gender: patientGender,
+        patient_phone: patientPhone.trim(),
+        chief_complaint: patientReason.trim(),
         idempotency_key: crypto.randomUUID(),
       }
 
@@ -279,7 +392,7 @@ export function BookOpdStepper({
       try {
         result = await createBooking(payload)
       } catch {
-        // Fallback simulated record with exact chosen Hospital Name and City
+        // Fallback simulated record with exact chosen Hospital Name, City and full patient details
         result = {
           id: `QF-${Math.floor(100 + Math.random() * 900)}`,
           token_number: `A-${String(Math.floor(1 + Math.random() * 99)).padStart(3, '0')}`,
@@ -289,6 +402,11 @@ export function BookOpdStepper({
           doctor_name: activeDoctor.display_name,
           appointment_date: day,
           slot_time: activeSlot?.time || '09:00 AM',
+          patient_name: patientName.trim(),
+          patient_age: patientAge.trim(),
+          patient_gender: patientGender,
+          patient_phone: patientPhone.trim(),
+          chief_complaint: patientReason.trim(),
           queue_position: 12,
           estimated_wait_minutes: 20,
           status: 'waiting',
@@ -306,12 +424,29 @@ export function BookOpdStepper({
   }
 
   const handleProceedToBook = async () => {
-    // MANDATORY ABHA CHECK: If unverified, show modal
+    setError('')
+    // Strict Mandatory Check
+    const { isValid, errors } = validateMandatoryDetails()
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0]
+      setError(`Cannot book token: ${firstError} All mandatory details marked with (*) must be filled.`)
+      const firstFieldKey = Object.keys(errors)[0]
+      const el = document.getElementById(`booking-field-${firstFieldKey}`)
+      if (el) {
+        el.focus()
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      return
+    }
+
+    // Mandatory ABHA CHECK: If unverified, show modal
     if (!patientAbhaVerified) {
       handleGenerateDemoAbha()
       setShowAbhaModal(true)
       return
     }
+
     await executeBooking()
   }
 
@@ -355,7 +490,7 @@ export function BookOpdStepper({
 
         <div className={`step-item ${step >= 3 ? 'is-active' : ''} ${step > 3 ? 'is-completed' : ''}`}>
           <div className="step-number-circle">{step > 3 ? <Check size={14} /> : '3'}</div>
-          <span className="step-title">Book Token</span>
+          <span className="step-title">Fill Details & Slot</span>
         </div>
 
         <div className="step-divider" />
@@ -367,8 +502,8 @@ export function BookOpdStepper({
       </div>
 
       {error && (
-        <div className="form-error-banner" role="alert">
-          <AlertCircle size={16} />
+        <div className="form-error-banner" role="alert" style={{ marginBottom: 20 }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <span>{error}</span>
         </div>
       )}
@@ -386,287 +521,430 @@ export function BookOpdStepper({
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
               >
+                {/* STEP 1: CHOOSE HOSPITAL & CITY */}
                 {step === 1 && (
-              <div className="step-form-block">
-                <div className="step-inner-heading">
-                  <h3>Choose Hospital & City</h3>
-                  <p>Pick from certified government and private healthcare facilities in your city.</p>
-                </div>
+                  <div className="step-form-block">
+                    <div className="step-inner-heading">
+                      <h3>Choose Hospital & City</h3>
+                      <p>Pick from certified government and private healthcare facilities in your city.</p>
+                    </div>
 
-                <div className="form-group">
-                  <label>Select Hospital & City ({hospitals.length} Certified Facilities Available)</label>
-                  <select
-                    value={hospitalId}
-                    onChange={(e) => setHospitalId(e.target.value)}
-                    className="styled-select"
-                  >
-                    {hospitals.map(h => (
-                      <option key={h.id || h.name} value={h.id || h.name}>
-                        {h.name} — {h.city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div className="form-group">
+                      <label htmlFor="hospital-select-input">
+                        Select Hospital & City ({hospitals.length} Certified Facilities Available) <span className="text-red-mandatory">*</span>
+                      </label>
+                      <select
+                        id="hospital-select-input"
+                        value={hospitalId}
+                        onChange={(e) => { setHospitalId(e.target.value); setError('') }}
+                        className="styled-select"
+                      >
+                        {hospitals.map(h => (
+                          <option key={h.id || h.name} value={h.id || h.name}>
+                            {h.name} — {h.city}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                {activeHospital && (
-                  <div className="chosen-hospital-quick-card">
-                    <div className="quick-card-header">
-                      <div className="quick-icon-box">
-                        <Building2 size={20} />
+                    {activeHospital && (
+                      <div className="chosen-hospital-quick-card">
+                        <div className="quick-card-header">
+                          <div className="quick-icon-box">
+                            <Building2 size={20} />
+                          </div>
+                          <div className="quick-info">
+                            <span className="quick-chosen-tag">YOUR CHOSEN FACILITY</span>
+                            <h4 className="quick-hospital-title">{activeHospital.name}</h4>
+                            <p className="quick-city-line">
+                              📍 <strong>{activeHospital.city}</strong> {activeHospital.address ? `· ${activeHospital.address}` : ''}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="quick-info">
-                        <span className="quick-chosen-tag">YOUR CHOSEN FACILITY</span>
-                        <h4 className="quick-hospital-title">{activeHospital.name}</h4>
-                        <p className="quick-city-line">
-                          📍 <strong>{activeHospital.city}</strong> {activeHospital.address ? `· ${activeHospital.address}` : ''}
-                        </p>
-                      </div>
+                    )}
+
+                    <div className="step-actions-footer">
+                      <button
+                        type="button"
+                        className="btn-primary-blue next-step-btn"
+                        onClick={() => {
+                          if (!hospitalId) {
+                            setError('Please select a hospital facility before proceeding.')
+                            return
+                          }
+                          setError('')
+                          setStep(2)
+                        }}
+                      >
+                        <span>Next: Select Department</span>
+                        <ArrowRight size={16} />
+                      </button>
                     </div>
                   </div>
                 )}
 
-                <div className="step-actions-footer">
-                  <button
-                    type="button"
-                    className="btn-primary-blue next-step-btn"
-                    onClick={() => setStep(2)}
-                  >
-                    <span>Next: Select Department</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="step-form-block">
-                {/* Prominent Selected Hospital Banner directly above Department Section */}
-                <div className="dept-step-hospital-banner">
-                  <div className="dept-banner-left">
-                    <div className="dept-hospital-icon-box">
-                      <Building2 size={24} />
+                {/* STEP 2: SELECT DEPARTMENT & DOCTOR */}
+                {step === 2 && (
+                  <div className="step-form-block">
+                    <div className="dept-step-hospital-banner">
+                      <div className="dept-banner-left">
+                        <div className="dept-hospital-icon-box">
+                          <Building2 size={24} />
+                        </div>
+                        <div>
+                          <span className="dept-hospital-tag">SELECTED HOSPITAL</span>
+                          <h3 className="dept-hospital-name">{activeHospital.name}</h3>
+                          <p className="dept-hospital-location">
+                            📍 {activeHospital.city} {activeHospital.address ? `· ${activeHospital.address}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-change-hospital"
+                        onClick={() => { setError(''); setStep(1) }}
+                        title="Select a different hospital"
+                      >
+                        Change Hospital
+                      </button>
                     </div>
-                    <div>
-                      <span className="dept-hospital-tag">SELECTED HOSPITAL</span>
-                      <h3 className="dept-hospital-name">{activeHospital.name}</h3>
-                      <p className="dept-hospital-location">
-                        📍 {activeHospital.city} {activeHospital.address ? `· ${activeHospital.address}` : ''}
+
+                    <div className="step-inner-heading">
+                      <h3>Select Department & Consulting Doctor</h3>
+                      <p>
+                        Showing all OPD clinical departments & consulting doctors available at <strong>{activeHospital.name}</strong>.
                       </p>
                     </div>
+
+                    <div className="form-group">
+                      <label htmlFor="dept-select-input">
+                        Medical Specialty Department at <strong>{activeHospital.name}</strong> ({departments.length} Specialties Available) <span className="text-red-mandatory">*</span>
+                      </label>
+                      <select
+                        id="dept-select-input"
+                        value={departmentId}
+                        onChange={(e) => { setDepartmentId(e.target.value); setError('') }}
+                        className="styled-select"
+                      >
+                        {departments.map(d => (
+                          <option key={d.id} value={d.id}>
+                            {d.name} {d.room ? `· (${d.room})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {activeDepartment?.description && (
+                        <small className="dept-description-hint">
+                          ℹ️ {activeDepartment.description}
+                        </small>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="doctor-select-input">
+                        Consulting Doctor <span className="text-red-mandatory">*</span>
+                      </label>
+                      <select
+                        id="doctor-select-input"
+                        value={doctorId}
+                        onChange={(e) => { setDoctorId(e.target.value); setError('') }}
+                        className="styled-select"
+                      >
+                        {doctors.map(doc => (
+                          <option key={doc.id} value={doc.id}>
+                            {doc.display_name} — {doc.qualification || 'Senior Consultant'} (★ {doc.rating || '4.8'}) · Fee: ₹{doc.fee || 250}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Interactive List of Doctors */}
+                    <div className="available-docs-container">
+                      <span className="available-docs-title">
+                        Available Doctors in {activeDepartment?.name}:
+                      </span>
+                      <div className="available-docs-cards-list">
+                        {doctors.map(doc => {
+                          const isSelected = String(doc.id) === String(doctorId)
+                          return (
+                            <div
+                              key={doc.id}
+                              className={`doc-card-interactive ${isSelected ? 'is-selected' : ''}`}
+                              onClick={() => { setDoctorId(String(doc.id)); setError('') }}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              <div className="doc-card-main-row">
+                                <div className="doc-avatar-icon">
+                                  <Stethoscope size={18} />
+                                </div>
+                                <div className="doc-card-text">
+                                  <strong className="doc-title-text">{doc.display_name}</strong>
+                                  <span className="doc-sub-qual">{doc.qualification}</span>
+                                  <div className="doc-meta-pills">
+                                    <span className="doc-pill rating">★ {doc.rating || 4.8} ({doc.reviews || 950}+)</span>
+                                    <span className="doc-pill exp">{doc.experienceYears || 12} yrs exp</span>
+                                    <span className="doc-pill fee">OPD Fee: ₹{doc.fee || 250}</span>
+                                  </div>
+                                </div>
+                                <div className="doc-select-radio">
+                                  <div className={`radio-indicator ${isSelected ? 'checked' : ''}`}>
+                                    {isSelected && <Check size={12} />}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="doc-card-sub-info">
+                                <span>📍 {doc.room || 'OPD Room'}</span>
+                                <span>🕒 {doc.opdTiming || '09:00 AM - 01:30 PM'}</span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="step-actions-footer">
+                      <button
+                        type="button"
+                        className="btn-secondary-white"
+                        onClick={() => { setError(''); setStep(1) }}
+                      >
+                        <ArrowLeft size={16} />
+                        <span>Back</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-primary-blue next-step-btn"
+                        onClick={() => {
+                          if (!departmentId) {
+                            setError('Please select an OPD medical specialty department.')
+                            return
+                          }
+                          if (!doctorId) {
+                            setError('Please select a consulting doctor.')
+                            return
+                          }
+                          setError('')
+                          setStep(3)
+                        }}
+                      >
+                        <span>Next: Fill Patient Details & Slot</span>
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-change-hospital"
-                    onClick={() => setStep(1)}
-                    title="Select a different hospital"
-                  >
-                    Change Hospital
-                  </button>
-                </div>
+                )}
 
-                <div className="step-inner-heading">
-                  <h3>Select Department & Consulting Doctor</h3>
-                  <p>
-                    Showing all OPD clinical departments & consulting doctors available at <strong>{activeHospital.name}</strong>.
-                  </p>
-                </div>
+                {/* STEP 3: MANDATORY PATIENT DETAILS, SYMPTOMS & SLOT */}
+                {step === 3 && (
+                  <div className="step-form-block">
+                    <div className="step-inner-heading">
+                      <h3>Patient Details & Appointment Slot</h3>
+                      <p>
+                        Complete all mandatory fields (*) to allocate a verified OPD queue token for <strong>{activeHospital.name}</strong>.
+                      </p>
+                    </div>
 
-                <div className="form-group">
-                  <label>
-                    Medical Specialty Department at <strong>{activeHospital.name}</strong> ({departments.length} OPD Specialties Available)
-                  </label>
-                  <select
-                    value={departmentId}
-                    onChange={(e) => setDepartmentId(e.target.value)}
-                    className="styled-select"
-                  >
-                    {departments.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.name} {d.room ? `· (${d.room})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {activeDepartment?.description && (
-                    <small className="dept-description-hint">
-                      ℹ️ {activeDepartment.description}
-                    </small>
-                  )}
-                </div>
+                    {/* MANDATORY PATIENT DETAILS CARD */}
+                    <div className="mandatory-details-section">
+                      <div className="mandatory-section-header">
+                        <h4>
+                          <User size={16} />
+                          <span>Mandatory Patient Information</span>
+                        </h4>
+                        <span className="mandatory-badge">Details Required</span>
+                      </div>
+                      <p className="mandatory-helper-text">
+                        Without completing these mandatory patient details, the hospital cannot generate an OPD token.
+                      </p>
 
-                <div className="form-group">
-                  <label>Consulting Doctor</label>
-                  <select
-                    value={doctorId}
-                    onChange={(e) => setDoctorId(e.target.value)}
-                    className="styled-select"
-                  >
-                    {doctors.map(doc => (
-                      <option key={doc.id} value={doc.id}>
-                        {doc.display_name} — {doc.qualification || 'Senior Consultant'} (★ {doc.rating || '4.8'}) · Fee: ₹{doc.fee || 250}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                      {/* Patient Full Name (Mandatory) */}
+                      <div className="form-group">
+                        <label htmlFor="booking-field-name">
+                          Patient Full Name <span className="text-red-mandatory">*</span>
+                        </label>
+                        <input
+                          id="booking-field-name"
+                          type="text"
+                          className={`styled-input ${fieldErrors.name ? 'input-error-border' : ''}`}
+                          placeholder="e.g. Priya Sharma"
+                          value={patientName}
+                          onChange={(e) => handlePatientFieldChange('name', e.target.value)}
+                          required
+                        />
+                        {fieldErrors.name && <span className="field-error-msg">{fieldErrors.name}</span>}
+                      </div>
 
-                {/* List of doctors for selected department */}
-                <div className="available-docs-container">
-                  <span className="available-docs-title">
-                    Available Doctors in {activeDepartment?.name}:
-                  </span>
-                  <div className="available-docs-cards-list">
-                    {doctors.map(doc => {
-                      const isSelected = String(doc.id) === String(doctorId)
-                      return (
-                        <div
-                          key={doc.id}
-                          className={`doc-card-interactive ${isSelected ? 'is-selected' : ''}`}
-                          onClick={() => setDoctorId(String(doc.id))}
-                          role="button"
-                          tabIndex={0}
-                        >
-                          <div className="doc-card-main-row">
-                            <div className="doc-avatar-icon">
-                              <Stethoscope size={18} />
-                            </div>
-                            <div className="doc-card-text">
-                              <strong className="doc-title-text">{doc.display_name}</strong>
-                              <span className="doc-sub-qual">{doc.qualification}</span>
-                              <div className="doc-meta-pills">
-                                <span className="doc-pill rating">★ {doc.rating || 4.8} ({doc.reviews || 950}+)</span>
-                                <span className="doc-pill exp">{doc.experienceYears || 12} yrs exp</span>
-                                <span className="doc-pill fee">OPD Fee: ₹{doc.fee || 250}</span>
-                              </div>
-                            </div>
-                            <div className="doc-select-radio">
-                              <div className={`radio-indicator ${isSelected ? 'checked' : ''}`}>
-                                {isSelected && <Check size={12} />}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="doc-card-sub-info">
-                            <span>📍 {doc.room || 'OPD Room'}</span>
-                            <span>🕒 {doc.opdTiming || '09:00 AM - 01:30 PM'}</span>
-                          </div>
+                      {/* Age & Gender Row (Mandatory) */}
+                      <div className="form-row-two-col">
+                        <div className="form-group">
+                          <label htmlFor="booking-field-age">
+                            Patient Age (Years) <span className="text-red-mandatory">*</span>
+                          </label>
+                          <input
+                            id="booking-field-age"
+                            type="number"
+                            min="1"
+                            max="120"
+                            className={`styled-input ${fieldErrors.age ? 'input-error-border' : ''}`}
+                            placeholder="e.g. 28"
+                            value={patientAge}
+                            onChange={(e) => handlePatientFieldChange('age', e.target.value)}
+                            required
+                          />
+                          {fieldErrors.age && <span className="field-error-msg">{fieldErrors.age}</span>}
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
 
-                <div className="step-actions-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary-white"
-                    onClick={() => setStep(1)}
-                  >
-                    <ArrowLeft size={16} />
-                    <span>Back</span>
-                  </button>
+                        <div className="form-group">
+                          <label htmlFor="booking-field-gender">
+                            Patient Gender <span className="text-red-mandatory">*</span>
+                          </label>
+                          <div className="gender-pills-group" id="booking-field-gender">
+                            {['Male', 'Female', 'Other'].map(g => (
+                              <button
+                                key={g}
+                                type="button"
+                                className={`gender-pill-btn ${patientGender === g ? 'selected' : ''} ${fieldErrors.gender ? 'error-border' : ''}`}
+                                onClick={() => handlePatientFieldChange('gender', g)}
+                              >
+                                {g}
+                              </button>
+                            ))}
+                          </div>
+                          {fieldErrors.gender && <span className="field-error-msg">{fieldErrors.gender}</span>}
+                        </div>
+                      </div>
 
-                  <button
-                    type="button"
-                    className="btn-primary-blue next-step-btn"
-                    onClick={() => setStep(3)}
-                  >
-                    <span>Next: Choose Time Slot</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
+                      {/* Contact Phone (Mandatory) */}
+                      <div className="form-group">
+                        <label htmlFor="booking-field-phone">
+                          Contact Mobile Number <span className="text-red-mandatory">*</span>
+                        </label>
+                        <input
+                          id="booking-field-phone"
+                          type="tel"
+                          className={`styled-input ${fieldErrors.phone ? 'input-error-border' : ''}`}
+                          placeholder="10-digit mobile number"
+                          value={patientPhone}
+                          onChange={(e) => handlePatientFieldChange('phone', e.target.value)}
+                          required
+                        />
+                        {fieldErrors.phone && <span className="field-error-msg">{fieldErrors.phone}</span>}
+                      </div>
 
-            {step === 3 && (
-              <div className="step-form-block">
-                <div className="step-inner-heading">
-                  <h3>Choose Slot & Confirm Token</h3>
-                  <p>Pick appointment date and time slot for {activeHospital.name}, {activeHospital.city}.</p>
-                </div>
-
-                <div className="form-group">
-                  <label>Appointment Date</label>
-                  <input
-                    type="date"
-                    min={localIsoDate()}
-                    value={day}
-                    onChange={(e) => setDay(e.target.value)}
-                    className="styled-input"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Available OPD Queue Slots</label>
-                  {loading ? (
-                    <div className="slots-loading">
-                      <RefreshCw size={16} className="spin-icon" />
-                      <span>Checking slot capacity…</span>
+                      {/* Symptoms / Chief Complaint (Mandatory) */}
+                      <div className="form-group">
+                        <label htmlFor="booking-field-reason">
+                          Chief Complaint / Symptoms / Reason for Visit <span className="text-red-mandatory">*</span>
+                        </label>
+                        <textarea
+                          id="booking-field-reason"
+                          rows={2}
+                          className={`styled-input ${fieldErrors.reason ? 'input-error-border' : ''}`}
+                          style={{ height: 'auto', minHeight: '74px', padding: '10px 14px', resize: 'vertical' }}
+                          placeholder="Describe symptoms or reason for visit (e.g. persistent fever, severe headache, skin allergy, routine checkup)..."
+                          value={patientReason}
+                          onChange={(e) => handlePatientFieldChange('reason', e.target.value)}
+                          required
+                        />
+                        {fieldErrors.reason && <span className="field-error-msg">{fieldErrors.reason}</span>}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="slots-pill-grid">
-                      {slots.map(s => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          disabled={!s.available}
-                          className={`slot-pill ${String(s.id) === slotId ? 'selected' : ''} ${!s.available ? 'unavailable' : ''}`}
-                          onClick={() => setSlotId(String(s.id))}
-                        >
-                          <Clock size={13} />
-                          <span>{s.time}</span>
-                        </button>
-                      ))}
+
+                    {/* APPOINTMENT SCHEDULE & SLOT */}
+                    <div className="form-group">
+                      <label htmlFor="booking-field-date">
+                        Appointment Date <span className="text-red-mandatory">*</span>
+                      </label>
+                      <input
+                        id="booking-field-date"
+                        type="date"
+                        min={localIsoDate()}
+                        value={day}
+                        onChange={(e) => { setDay(e.target.value); setError('') }}
+                        className={`styled-input ${fieldErrors.date ? 'input-error-border' : ''}`}
+                      />
+                      {fieldErrors.date && <span className="field-error-msg">{fieldErrors.date}</span>}
                     </div>
-                  )}
-                </div>
 
-                {/* Mandatory ABHA Status Card */}
-                <div className="abha-status-box">
-                  <div className="abha-box-icon">
-                    <ShieldCheck size={20} className={patientAbhaVerified ? 'text-green' : 'text-blue'} />
+                    <div className="form-group">
+                      <label id="booking-field-slot">
+                        Available OPD Queue Slots <span className="text-red-mandatory">*</span>
+                      </label>
+                      {loading ? (
+                        <div className="slots-loading">
+                          <RefreshCw size={16} className="spin-icon" />
+                          <span>Checking slot capacity…</span>
+                        </div>
+                      ) : (
+                        <div className="slots-pill-grid">
+                          {slots.map(s => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              disabled={!s.available}
+                              className={`slot-pill ${String(s.id) === slotId ? 'selected' : ''} ${!s.available ? 'unavailable' : ''}`}
+                              onClick={() => { setSlotId(String(s.id)); setError('') }}
+                            >
+                              <Clock size={13} />
+                              <span>{s.time}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {fieldErrors.slot && <span className="field-error-msg">{fieldErrors.slot}</span>}
+                    </div>
+
+                    {/* Mandatory ABHA Status Card */}
+                    <div className="abha-status-box">
+                      <div className="abha-box-icon">
+                        <ShieldCheck size={20} className={patientAbhaVerified ? 'text-green' : 'text-blue'} />
+                      </div>
+                      <div className="abha-box-content">
+                        {patientAbhaVerified ? (
+                          <>
+                            <strong>✓ ABHA Identity Verified</strong>
+                            <span>Your digital health ID is active. Direct queue token allocation is approved.</span>
+                          </>
+                        ) : (
+                          <>
+                            <strong>ABHA Verification Mandatory for Token Generation</strong>
+                            <span>To prevent fake bookings and black-marketing of OPD slots, ABHA ID verification is required upon clicking Book Token.</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="step-actions-footer">
+                      <button
+                        type="button"
+                        className="btn-secondary-white"
+                        onClick={() => { setError(''); setStep(2) }}
+                      >
+                        <ArrowLeft size={16} />
+                        <span>Back</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn-primary-blue confirm-book-btn"
+                        onClick={handleProceedToBook}
+                        disabled={bookingLoading || loading}
+                      >
+                        {bookingLoading ? 'Allocating Token…' : 'Book OPD Token'}
+                        <Ticket size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="abha-box-content">
-                    {patientAbhaVerified ? (
-                      <>
-                        <strong>✓ ABHA Identity Verified</strong>
-                        <span>Your digital health ID is active. Direct queue token allocation is approved.</span>
-                      </>
-                    ) : (
-                      <>
-                        <strong>ABHA Verification Mandatory for Token Generation</strong>
-                        <span>To prevent fake bookings and black-marketing of OPD slots, ABHA ID verification is required upon clicking Book Token.</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="step-actions-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary-white"
-                    onClick={() => setStep(2)}
-                  >
-                    <ArrowLeft size={16} />
-                    <span>Back</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-primary-blue confirm-book-btn"
-                    onClick={handleProceedToBook}
-                    disabled={bookingLoading || loading}
-                  >
-                    {bookingLoading ? 'Allocating Token…' : 'Book OPD Token'}
-                    <Ticket size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Right Summary Card with exact Hospital Name and City */}
+          {/* Right Summary Card with exact Hospital Name, City & Live Patient Details */}
           <aside className="selected-hospital-summary-card">
-            <h4 className="summary-card-title">Selected Hospital</h4>
+            <h4 className="summary-card-title">Booking Summary</h4>
 
             {activeHospital && (
               <div className="summary-hospital-body">
@@ -709,6 +987,24 @@ export function BookOpdStepper({
                     <span>Date & Time</span>
                     <strong>{day} at {activeSlot?.time || '09:00 AM'}</strong>
                   </div>
+
+                  {/* Patient Details in Summary */}
+                  <div className="summary-detail-row">
+                    <span>Patient Name</span>
+                    <strong>{patientName || <em style={{ color: '#94a3b8' }}>Required *</em>}</strong>
+                  </div>
+                  <div className="summary-detail-row">
+                    <span>Age & Gender</span>
+                    <strong>
+                      {patientAge ? `${patientAge} yrs, ${patientGender || 'Gender pending'}` : <em style={{ color: '#94a3b8' }}>Required *</em>}
+                    </strong>
+                  </div>
+                  <div className="summary-detail-row">
+                    <span>Symptoms</span>
+                    <strong>
+                      {patientReason ? (patientReason.length > 25 ? `${patientReason.slice(0, 25)}…` : patientReason) : <em style={{ color: '#94a3b8' }}>Required *</em>}
+                    </strong>
+                  </div>
                 </div>
 
                 <button
@@ -724,7 +1020,7 @@ export function BookOpdStepper({
           </aside>
         </div>
       ) : (
-        /* Step 4: Confirmation screen showing chosen Hospital and City */
+        /* STEP 4: CONFIRMATION VIEW WITH PATIENT DETAILS & RAZORPAY QR */
         <div className="booking-confirmation-view">
           <div className="confirmation-card">
             <div className="confirm-icon-circle">
@@ -747,6 +1043,16 @@ export function BookOpdStepper({
             </div>
 
             <div className="confirmed-summary-box">
+              <div className="summary-item">
+                <small>PATIENT DETAILS</small>
+                <strong>
+                  {confirmedBooking?.patient_name || patientName} ({confirmedBooking?.patient_age || patientAge} yrs, {confirmedBooking?.patient_gender || patientGender}) · {confirmedBooking?.patient_phone || patientPhone}
+                </strong>
+              </div>
+              <div className="summary-item">
+                <small>CHIEF COMPLAINT / SYMPTOMS</small>
+                <strong>{confirmedBooking?.chief_complaint || patientReason}</strong>
+              </div>
               <div className="summary-item">
                 <small>HOSPITAL & CITY</small>
                 <strong>{confirmedBooking?.hospital_name || activeHospital.name}, {confirmedBooking?.hospital_city || activeHospital.city}</strong>
@@ -814,7 +1120,7 @@ export function BookOpdStepper({
                 </p>
 
                 <div className="form-group">
-                  <label>ABHA ID (Demo Format: DEMO-ABHA-XXXX-XXXX)</label>
+                  <label>ABHA ID (Demo Format: DEMO-ABHA-XXXX-XXXX) <span className="text-red-mandatory">*</span></label>
                   <div className="input-with-action">
                     <input
                       type="text"
@@ -875,7 +1181,7 @@ export function BookOpdStepper({
                 </div>
 
                 <div className="form-group">
-                  <label>Enter 6-digit ABHA One-Time Password</label>
+                  <label>Enter 6-digit ABHA One-Time Password <span className="text-red-mandatory">*</span></label>
                   <input
                     type="text"
                     maxLength={6}

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Activity, ArrowRight, Building, Calendar, HeartPulse, Phone, Mail, ShieldCheck,
   Stethoscope, Users, Building2, Check, AlertCircle, Sparkles, User, Menu, X, Lock,
-  KeyRound, Shield
+  Shield
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { deriveNameFromEmail } from '../../lib/appData'
@@ -243,32 +243,13 @@ export function LandingPage({
 
           <div className="landing-nav-links">
             <a href="#home" className="active">Home</a>
-            <a href="#hospitals" onClick={(e) => { e.preventDefault(); onExploreHospitals() }}>Hospitals</a>
-            <a href="#services">Services</a>
+            <a href="#hospitals" onClick={(e) => { e.preventDefault(); onExploreHospitals?.('nearby') }}>Hospitals</a>
+            <a href="#services" onClick={(e) => { e.preventDefault(); onExploreHospitals?.('book') }}>Services</a>
             <a href="#about">About</a>
             <a href="#help">Help</a>
           </div>
 
           <div className="landing-nav-actions">
-            <button
-              type="button"
-              className={`staff-portal-btn doctor-link ${activeRole === 'doctor' ? 'is-active' : ''}`}
-              onClick={() => scrollToLoginCard('doctor')}
-              title="Access Doctor OPD Console Login"
-            >
-              <Stethoscope size={15} />
-              <span>Doctor Portal</span>
-            </button>
-            <button
-              type="button"
-              className={`staff-portal-btn reception-link ${activeRole === 'reception' ? 'is-active' : ''}`}
-              onClick={() => scrollToLoginCard('reception')}
-              title="Access Hospital Reception Desk Login"
-            >
-              <Building2 size={15} />
-              <span>Reception Desk</span>
-            </button>
-
             {/* Mobile Nav Hamburger Toggle */}
             <button
               type="button"
@@ -286,26 +267,8 @@ export function LandingPage({
           <div className="landing-mobile-drawer">
             <div className="mobile-drawer-links">
               <a href="#home" className="active" onClick={() => setMobileMenuOpen(false)}>Home</a>
-              <a href="#hospitals" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals() }}>Explore Hospitals</a>
-              <a href="#services" onClick={() => setMobileMenuOpen(false)}>OPD Services</a>
-            </div>
-            <div className="mobile-drawer-portals">
-              <button
-                type="button"
-                className="mobile-portal-btn doctor"
-                onClick={() => { setMobileMenuOpen(false); scrollToLoginCard('doctor') }}
-              >
-                <Stethoscope size={16} />
-                <span>Doctor OPD Console</span>
-              </button>
-              <button
-                type="button"
-                className="mobile-portal-btn reception"
-                onClick={() => { setMobileMenuOpen(false); scrollToLoginCard('reception') }}
-              >
-                <Building2 size={16} />
-                <span>Reception Desk</span>
-              </button>
+              <a href="#hospitals" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals?.('nearby') }}>Explore Hospitals</a>
+              <a href="#services" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals?.('book') }}>OPD Services</a>
             </div>
           </div>
         )}
@@ -340,7 +303,12 @@ export function LandingPage({
               <button
                 type="button"
                 className="btn-primary-blue"
-                onClick={() => scrollToLoginCard('patient')}
+                onClick={() => {
+                  scrollToLoginCard('patient')
+                  setTimeout(() => {
+                    document.getElementById('phone-login-input')?.focus()
+                  }, 150)
+                }}
               >
                 <span>Get Started</span>
                 <ArrowRight size={16} />
@@ -349,7 +317,7 @@ export function LandingPage({
               <button
                 type="button"
                 className="btn-secondary-white"
-                onClick={onExploreHospitals}
+                onClick={() => onExploreHospitals?.('nearby')}
               >
                 <Building size={16} />
                 <span>Explore Hospitals</span>
@@ -358,22 +326,42 @@ export function LandingPage({
 
             {/* Feature Pills */}
             <div className="hero-feature-pills">
-              <div className="feature-pill">
+              <button
+                type="button"
+                className="feature-pill feature-pill-btn"
+                onClick={() => onExploreHospitals?.('book')}
+                title="Book OPD Appointments Online"
+              >
                 <Calendar size={15} className="pill-icon" />
                 <span>Online OPD Booking</span>
-              </div>
-              <div className="feature-pill">
+              </button>
+              <button
+                type="button"
+                className="feature-pill feature-pill-btn"
+                onClick={() => onExploreHospitals?.('queue')}
+                title="Track Live OPD Queues"
+              >
                 <Users size={15} className="pill-icon" />
                 <span>Live Queue Tracking</span>
-              </div>
-              <div className="feature-pill">
+              </button>
+              <button
+                type="button"
+                className="feature-pill feature-pill-btn"
+                onClick={() => onExploreHospitals?.('emergency')}
+                title="Find Emergency & ICU Beds"
+              >
                 <HeartPulse size={15} className="pill-icon" />
                 <span>Emergency Bed Finder</span>
-              </div>
-              <div className="feature-pill">
+              </button>
+              <button
+                type="button"
+                className="feature-pill feature-pill-btn"
+                onClick={() => onExploreHospitals?.('nearby')}
+                title="Explore Verified Hospitals"
+              >
                 <Building2 size={15} className="pill-icon" />
                 <span>Multiple Hospitals</span>
-              </div>
+              </button>
             </div>
           </div>
 

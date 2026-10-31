@@ -423,6 +423,26 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
+.feature-pill-btn {
+  cursor: pointer;
+  background: white;
+  border: 1px solid var(--line-border);
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feature-pill-btn:hover {
+  border-color: var(--primary-blue);
+  background: #f0f7ff;
+  color: var(--primary-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+}
+
+.feature-pill-btn:active {
+  transform: translateY(0);
+}
+
 .pill-icon {
   color: var(--primary-blue);
 }
@@ -1312,6 +1332,122 @@ body {
   font-size: 13px;
   color: var(--text-muted);
   margin: 0 0 24px;
+}
+
+/* Mandatory Details Styling in OPD Token Booking */
+.text-red-mandatory {
+  color: #ef4444;
+  margin-left: 3px;
+  font-weight: 700;
+}
+
+.input-error-border {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.field-error-msg {
+  display: block;
+  font-size: 11.5px;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.mandatory-details-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.mandatory-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mandatory-section-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--sidebar-navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mandatory-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.mandatory-helper-text {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.form-row-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .form-row-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gender-pills-group {
+  display: flex;
+  gap: 8px;
+}
+
+.gender-pill-btn {
+  flex: 1;
+  height: 44px;
+  background: white;
+  border: 1px solid var(--line-border);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gender-pill-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.gender-pill-btn.selected {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22);
+}
+
+.gender-pill-btn.error-border {
+  border-color: #ef4444;
+  background: #fef2f2;
 }
 
 .slots-pill-grid {

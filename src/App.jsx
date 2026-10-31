@@ -520,6 +520,7 @@ export function App() {
                   onAbhaVerifiedSuccess={handleAbhaVerifiedSuccess}
                   city={city}
                   onNavigate={setTab}
+                  patientSession={patientSession}
                 />
               )}
 
