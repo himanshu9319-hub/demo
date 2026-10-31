@@ -60,6 +60,9 @@ def _allocate_managed_token(hospital, department, day):
 @transaction.atomic
 def create_booking(user, data):
     patient = PatientProfile.objects.select_for_update().get(pk=get_patient(user).pk)
+    if not patient.abha_demo_identifier or patient.abha_demo_identifier.startswith("PENDING-"):
+        raise Conflict("ABHA ID verification is mandatory to book an OPD appointment token and prevent unauthorized bookings.")
+
     existing = Booking.objects.filter(patient=patient, idempotency_key=data["idempotency_key"]).first()
     if existing:
         return existing, False

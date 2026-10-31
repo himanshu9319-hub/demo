@@ -19,8 +19,8 @@ from .models import AppointmentSlot, AuditLog, Booking, Department, Doctor, Hosp
 from .permissions import IsHospitalAdmin, IsHospitalStaff, IsPatient
 from .serializers import (
     BookingCreateSerializer, BookingSerializer, CancelSerializer, DemoPatientLoginSerializer,
-    DepartmentSerializer, DoctorSerializer, HospitalSerializer, QueueActionSerializer,
-    RescheduleSerializer, StaffLoginSerializer,
+    DepartmentSerializer, DoctorSerializer, HospitalSerializer, PatientPhoneLoginSerializer,
+    PatientVerifyAbhaSerializer, QueueActionSerializer, RescheduleSerializer, StaffLoginSerializer,
 )
 from .services import Conflict, ServiceUnavailable, available_slots, cancel_booking, create_booking, get_patient, perform_queue_action, staff_for
 
@@ -56,6 +56,69 @@ class PatientDemoLoginView(APIView):
         }
         profile.save(update_fields=["phone", "consent_preferences"])
         return Response(tokens_for(user, "patient"))
+
+
+class PatientPhoneLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PatientPhoneLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data["phone"]
+        name = serializer.validated_data.get("name", "Ambika Sharma")
+        email = serializer.validated_data.get("email", "ambika.sharma@example.com")
+        clean_phone = "".join(ch for ch in phone if ch.isdigit())
+        username = f"patient-phone-{clean_phone}"
+        user, _ = User.objects.get_or_create(username=username)
+        temp_abha = f"PENDING-ABHA-{clean_phone[-8:]}"
+        profile, created = PatientProfile.objects.get_or_create(
+            user=user,
+            defaults={"abha_demo_identifier": temp_abha, "display_name": name, "phone": phone, "email": email},
+        )
+        update_fields = []
+        if not created:
+            if not profile.phone:
+                profile.phone = phone
+                update_fields.append("phone")
+            if email and not profile.email:
+                profile.email = email
+                update_fields.append("email")
+            if update_fields:
+                profile.save(update_fields=update_fields)
+
+        is_verified = bool(profile.abha_demo_identifier and not profile.abha_demo_identifier.startswith("PENDING-"))
+        tokens = tokens_for(user, "patient")
+        tokens["abha_verified"] = is_verified
+        tokens["abha_id"] = profile.abha_demo_identifier if is_verified else ""
+        tokens["display_name"] = profile.display_name
+        tokens["phone"] = profile.phone
+        tokens["email"] = profile.email or email
+        return Response(tokens)
+
+
+class PatientVerifyAbhaView(APIView):
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def post(self, request):
+        serializer = PatientVerifyAbhaSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        abha_id = serializer.validated_data["abha_identifier"]
+        patient = get_patient(request.user)
+        existing = PatientProfile.objects.filter(abha_demo_identifier=abha_id).exclude(pk=patient.pk).first()
+        if existing:
+            raise ValidationError({"abha": "This ABHA ID is already linked to another patient profile."})
+        patient.abha_demo_identifier = abha_id
+        patient.consent_preferences = {
+            **patient.consent_preferences,
+            "whatsapp_queue_notifications": serializer.validated_data.get("whatsapp_notifications_consent", True),
+            "whatsapp_queue_notifications_consented_at": timezone.now().isoformat(),
+        }
+        patient.save(update_fields=["abha_demo_identifier", "consent_preferences"])
+        return Response({
+            "status": "verified",
+            "abha_id": abha_id,
+            "message": "ABHA ID verified and linked to your patient profile successfully.",
+        })
 
 
 class StaffLoginView(APIView):

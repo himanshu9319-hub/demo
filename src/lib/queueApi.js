@@ -49,6 +49,23 @@ export async function patientDemoLogin(identifier, phone, whatsappConsent) {
   })
 }
 
+export async function patientPhoneLogin(phone, name = 'Ambika Sharma', email = 'ambika.sharma@example.com') {
+  return apiRequest('/auth/patient/phone/', {
+    method: 'POST',
+    body: { phone, name, email },
+  })
+}
+
+export async function patientVerifyAbha(abha_identifier, whatsappConsent = true) {
+  return apiRequest('/auth/patient/verify-abha/', {
+    method: 'POST',
+    body: {
+      abha_identifier,
+      whatsapp_notifications_consent: whatsappConsent,
+    },
+  })
+}
+
 export async function staffLogin(username, password) {
   return apiRequest('/auth/staff/login/', { method: 'POST', body: { username, password } })
 }

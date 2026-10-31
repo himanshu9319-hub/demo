@@ -48,6 +48,57 @@ class DemoPatientLoginTests(APITestCase):
         self.assertIn("whatsapp_queue_notifications_consented_at", profile.consent_preferences)
         self.assertNotIn("phone", response.data)
 
+    def test_phone_login_does_not_ask_abha_at_start(self):
+        response = self.client.post(
+            "/api/v1/auth/patient/phone/",
+            {"phone": "+919876543210", "name": "Ambika Sharma"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("access", response.data)
+        self.assertFalse(response.data["abha_verified"])
+        self.assertEqual(response.data["display_name"], "Ambika Sharma")
+
+    def test_booking_rejected_until_abha_verified_then_succeeds(self):
+        login_res = self.client.post(
+            "/api/v1/auth/patient/phone/",
+            {"phone": "+919876543219", "name": "Ambika Sharma"},
+            format="json",
+        )
+        user = User.objects.get(username="patient-phone-919876543219")
+        self.client.force_authenticate(user)
+
+        # Attempt to book token before ABHA verification
+        hospital = Hospital.objects.create(name="Hosp A", integration_type=Hospital.IntegrationType.QUEUEFREE, city="Dehradun")
+        dept = Department.objects.create(hospital=hospital, name="Gen Med", code="gm")
+        doc = Doctor.objects.create(department=dept, display_name="Dr. Demo")
+        slot = AppointmentSlot.objects.create(doctor=doc, appointment_date=date.today() + timedelta(days=2), start_time=time(10), capacity=1)
+
+        payload = {
+            "hospital_id": hospital.pk,
+            "department_id": dept.pk,
+            "doctor_id": doc.pk,
+            "date": (date.today() + timedelta(days=2)).isoformat(),
+            "slot_id": slot.pk,
+            "idempotency_key": str(uuid4()),
+        }
+        book_res = self.client.post("/api/v1/bookings/", payload, format="json")
+        self.assertEqual(book_res.status_code, 409)
+        self.assertIn("ABHA ID verification is mandatory", str(book_res.data))
+
+        # Verify ABHA ID
+        verify_res = self.client.post(
+            "/api/v1/auth/patient/verify-abha/",
+            {"abha_identifier": "DEMO-ABHA-8888-9999", "whatsapp_notifications_consent": True},
+            format="json",
+        )
+        self.assertEqual(verify_res.status_code, 200)
+
+        # Now booking succeeds
+        book_res_2 = self.client.post("/api/v1/bookings/", payload, format="json")
+        self.assertIn(book_res_2.status_code, [200, 201])
+        self.assertEqual(Booking.objects.filter(patient__user=user).count(), 1)
+
 
 class BookingApiTests(APITestCase):
     def setUp(self):

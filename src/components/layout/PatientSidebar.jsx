@@ -1,0 +1,47 @@
+import { LayoutDashboard, CalendarPlus, Users, MapPin, Siren, FileText, User, LogOut, Activity } from 'lucide-react'
+
+export function PatientSidebar({ activeTab, onSelectTab, onLogout, patientName = 'Ambika' }) {
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'nearby', label: 'Nearby Hospitals', icon: MapPin },
+    { id: 'book', label: 'Book OPD', icon: CalendarPlus },
+    { id: 'queue', label: 'Live Queue', icon: Users },
+    { id: 'emergency', label: 'Emergency', icon: Siren },
+    { id: 'records', label: 'Health Records', icon: FileText },
+    { id: 'profile', label: 'Profile', icon: User },
+  ]
+
+  return (
+    <aside className="patient-sidebar" aria-label="Patient navigation">
+      <div className="patient-sidebar-brand">
+        <div className="brand-logo-container">
+          <span className="brand-icon-box">
+            <Activity size={20} strokeWidth={2.5} />
+          </span>
+          <span className="brand-title">Queue<span>Free</span></span>
+        </div>
+      </div>
+
+      <nav className="patient-sidebar-nav">
+        {navItems.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className={`patient-nav-item ${activeTab === id ? 'is-active' : ''}`}
+            onClick={() => onSelectTab(id)}
+          >
+            <Icon size={18} className="nav-icon" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className="patient-sidebar-footer">
+        <button type="button" className="patient-nav-item logout-item" onClick={onLogout}>
+          <LogOut size={18} className="nav-icon" />
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+  )
+}

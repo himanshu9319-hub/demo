@@ -1,0 +1,142 @@
+import { useState, useRef, useEffect } from 'react'
+import {
+  Bell, MapPin, Search, ChevronDown, Stethoscope, Building2, LogOut,
+  User, CheckCircle, ShieldCheck
+} from 'lucide-react'
+
+export function PatientTopBar({
+  activeTab,
+  patientName = 'Ambika',
+  patientEmail = 'ambika.sharma@example.com',
+  patientPhone = '+91 98765 43210',
+  city = 'Rishikesh, Uttarakhand',
+  searchQuery = '',
+  onSearchChange,
+  onOpenLocation,
+  onNavigatePortal,
+  onLogout,
+  unreadCount = 2,
+}) {
+  const isDashboard = activeTab === 'dashboard'
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
+
+  return (
+    <header className="patient-topbar">
+      <div className="topbar-left">
+        {isDashboard ? (
+          <div className="patient-greeting">
+            <h1>Hello, {patientName} 👋</h1>
+            <p className="greeting-sub">“Skip the line, save your time.”</p>
+          </div>
+        ) : (
+          <div className="topbar-search-wrap">
+            <div className="topbar-search">
+              <Search size={16} className="search-icon" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => onSearchChange?.(e.target.value)}
+                placeholder="Search hospitals near you..."
+              />
+            </div>
+            {city && (
+              <button type="button" className="topbar-location-pill" onClick={onOpenLocation}>
+                <MapPin size={14} className="location-pin-icon" />
+                <span>{city}</span>
+                <ChevronDown size={14} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="topbar-right">
+        {/* Quick Portal Switchers */}
+        <div className="portal-switchers">
+          <button
+            type="button"
+            className="portal-badge-btn"
+            onClick={() => onNavigatePortal('doctor')}
+            title="Switch to Doctor Dashboard"
+          >
+            <Stethoscope size={14} />
+            <span>Doctor Portal</span>
+          </button>
+          <button
+            type="button"
+            className="portal-badge-btn"
+            onClick={() => onNavigatePortal('reception')}
+            title="Switch to Reception Desk"
+          >
+            <Building2 size={14} />
+            <span>Reception Desk</span>
+          </button>
+        </div>
+
+        {/* Notifications */}
+        <button type="button" className="topbar-icon-btn notification-btn" aria-label="Notifications">
+          <Bell size={18} />
+          {unreadCount > 0 && <span className="notification-dot" />}
+        </button>
+
+        {/* Direct One-Click Logout Button (Requested by User) */}
+        <button
+          type="button"
+          className="topbar-quick-logout-btn"
+          onClick={onLogout}
+          title="Sign out of this patient account"
+        >
+          <LogOut size={15} />
+          <span>Logout</span>
+        </button>
+
+        {/* User Avatar with Profile Dropdown Menu */}
+        <div className="user-profile-menu-wrapper" ref={menuRef}>
+          <button
+            type="button"
+            className="user-avatar-badge-btn"
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            aria-label="User profile menu"
+          >
+            <span>{patientName.charAt(0).toUpperCase()}</span>
+          </button>
+
+          {userMenuOpen && (
+            <div className="user-dropdown-popover">
+              <div className="dropdown-user-header">
+                <strong>{patientName}</strong>
+                <small>{patientEmail}</small>
+                <small className="dropdown-phone">{patientPhone}</small>
+              </div>
+
+              <div className="dropdown-divider" />
+
+              <button
+                type="button"
+                className="dropdown-menu-item red-logout-btn"
+                onClick={() => {
+                  setUserMenuOpen(false)
+                  onLogout?.()
+                }}
+              >
+                <LogOut size={15} />
+                <span>Log out from account</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}

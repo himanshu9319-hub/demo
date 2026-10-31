@@ -1,6 +1,7 @@
 // Runtime validation coverage for hospital data and queue helpers.
 import { describe, expect, it } from 'vitest'
 import { createDoctorDirectory, distanceKm, doctorsByDept, hospitalKey, initialHospitals, navItems, opdKey } from './appData.js'
+import { generateQrMatrix } from './qrCode.js'
 
 describe('hospital and queue helpers', () => {
   it('provides location data and stable keys for sample hospitals', () => {
@@ -32,5 +33,17 @@ describe('hospital and queue helpers', () => {
 
   it('calculates zero distance for identical coordinates', () => {
     expect(distanceKm({ lat: 12.9, lon: 77.6 }, { lat: 12.9, lon: 77.6 })).toBe(0)
+  })
+
+  it('generates valid QR code matrix for UPI payment payload with hospital details', () => {
+    const upiPayload = 'upi://pay?pa=aiims.opd@razorpay&pn=AIIMS%20Rishikesh&am=250&cu=INR&tn=Token_A025'
+    const matrix = generateQrMatrix(upiPayload)
+    expect(Array.isArray(matrix)).toBe(true)
+    expect(matrix.length).toBeGreaterThanOrEqual(21)
+    expect(matrix[0].length).toBe(matrix.length)
+    // Finder pattern checks
+    expect(matrix[0][0]).toBe(true)
+    expect(matrix[0][1]).toBe(true)
+    expect(matrix[0][6]).toBe(true)
   })
 })

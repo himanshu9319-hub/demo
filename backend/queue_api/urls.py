@@ -5,6 +5,8 @@ from . import views
 
 urlpatterns = [
     path("auth/patient/demo/", views.PatientDemoLoginView.as_view(), name="patient-demo-login"),
+    path("auth/patient/phone/", views.PatientPhoneLoginView.as_view(), name="patient-phone-login"),
+    path("auth/patient/verify-abha/", views.PatientVerifyAbhaView.as_view(), name="patient-verify-abha"),
     path("auth/staff/login/", views.StaffLoginView.as_view(), name="staff-login"),
     path("hospitals/", views.HospitalListView.as_view(), name="hospital-list"),
     path("hospitals/<int:hospital_id>/", views.HospitalDetailView.as_view(), name="hospital-detail"),

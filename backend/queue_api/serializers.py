@@ -131,6 +131,17 @@ class DemoPatientLoginSerializer(serializers.Serializer):
         return value
 
 
+class PatientPhoneLoginSerializer(serializers.Serializer):
+    phone = serializers.RegexField(r"^\+[1-9][0-9]{7,14}$", max_length=16)
+    name = serializers.CharField(max_length=120, required=False, default="Ambika Sharma")
+    email = serializers.EmailField(required=False, allow_blank=True, default="ambika.sharma@example.com")
+
+
+class PatientVerifyAbhaSerializer(serializers.Serializer):
+    abha_identifier = serializers.RegexField(r"^DEMO-ABHA-[0-9]{4}-[0-9]{4}$", max_length=40)
+    whatsapp_notifications_consent = serializers.BooleanField(default=True)
+
+
 class StaffLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)

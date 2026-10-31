@@ -24,9 +24,9 @@ class Command(BaseCommand):
             raise CommandError("Set DEMO_SEED_PASSWORD to a value of at least 12 characters before seeding.")
 
         specs = [
-            ("QueueFree API Demo Hospital", "Dehradun", Hospital.IntegrationType.API, "https://api-demo.example.test/book", True),
-            ("QueueFree Website Demo Clinic", "Dehradun", Hospital.IntegrationType.WEBSITE, "https://booking.example.test", False),
-            ("QueueFree Managed Demo Hospital", "Bengaluru", Hospital.IntegrationType.QUEUEFREE, "", True),
+            ("AIIMS Rishikesh", "Rishikesh", Hospital.IntegrationType.API, "https://aiimsrishikesh.edu.in", True),
+            ("Max Super Speciality Hospital", "Dehradun", Hospital.IntegrationType.WEBSITE, "https://maxhealthcare.in", False),
+            ("District Hospital Rishikesh", "Rishikesh", Hospital.IntegrationType.QUEUEFREE, "", True),
         ]
         for name, city, mode, url, payment_required in specs:
             hospital, _ = Hospital.objects.update_or_create(
