@@ -2,6 +2,8 @@ import {
   Calendar, Users, Clock, Building2, ArrowRight, MapPin, Siren, Heart,
   CheckCircle2, Sparkles
 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { CardSpotlight, GsapCounter } from '../ui/AceternityCards'
 
 export function PatientHomeDashboard({
   onNavigate,
@@ -15,22 +17,37 @@ export function PatientHomeDashboard({
   const bookingsCount = bookings.length > 0 ? bookings.length : (activeBooking ? 1 : 0)
 
   return (
-    <div className="dashboard-view-container">
-      {/* Top 4 Stat Cards */}
+    <motion.div
+      className="dashboard-view-container"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Top 4 Stat Cards with Aceternity Spotlight & GSAP Counter */}
       <section className="stats-cards-grid" aria-label="Quick statistics">
         {/* Card 1: My Bookings */}
-        <div className="stat-card" onClick={() => onNavigate('records')}>
+        <CardSpotlight
+          className="stat-card"
+          spotlightColor="rgba(37, 99, 235, 0.12)"
+          onClick={() => onNavigate('records')}
+        >
           <div className="stat-card-left">
             <span className="stat-label">My Bookings</span>
-            <strong className="stat-value">{bookingsCount}</strong>
+            <strong className="stat-value">
+              <GsapCounter value={bookingsCount} duration={0.8} />
+            </strong>
           </div>
           <div className="stat-icon-wrapper blue-bg">
             <Calendar size={22} className="stat-icon blue-text" />
           </div>
-        </div>
+        </CardSpotlight>
 
         {/* Card 2: Live Queue */}
-        <div className="stat-card" onClick={() => onNavigate('queue')}>
+        <CardSpotlight
+          className="stat-card"
+          spotlightColor="rgba(6, 182, 212, 0.12)"
+          onClick={() => onNavigate('queue')}
+        >
           <div className="stat-card-left">
             <span className="stat-label">Live Queue</span>
             <strong className="stat-value">{tokenDisplay}</strong>
@@ -38,10 +55,14 @@ export function PatientHomeDashboard({
           <div className="stat-icon-wrapper cyan-bg">
             <Users size={22} className="stat-icon cyan-text" />
           </div>
-        </div>
+        </CardSpotlight>
 
         {/* Card 3: Est. Wait */}
-        <div className="stat-card" onClick={() => onNavigate('queue')}>
+        <CardSpotlight
+          className="stat-card"
+          spotlightColor="rgba(245, 158, 11, 0.12)"
+          onClick={() => onNavigate('queue')}
+        >
           <div className="stat-card-left">
             <span className="stat-label">Est. Wait</span>
             <strong className="stat-value">{waitDisplay}</strong>
@@ -49,32 +70,40 @@ export function PatientHomeDashboard({
           <div className="stat-icon-wrapper orange-bg">
             <Clock size={22} className="stat-icon orange-text" />
           </div>
-        </div>
+        </CardSpotlight>
 
         {/* Card 4: Nearby Hospitals */}
-        <div className="stat-card" onClick={() => onNavigate('nearby')}>
+        <CardSpotlight
+          className="stat-card"
+          spotlightColor="rgba(99, 102, 241, 0.12)"
+          onClick={() => onNavigate('nearby')}
+        >
           <div className="stat-card-left">
             <span className="stat-label">Nearby Hospitals</span>
-            <strong className="stat-value">{hospitalsCount}</strong>
+            <strong className="stat-value">
+              <GsapCounter value={hospitalsCount} duration={1} />
+            </strong>
           </div>
           <div className="stat-icon-wrapper indigo-bg">
             <Building2 size={22} className="stat-icon indigo-text" />
           </div>
-        </div>
+        </CardSpotlight>
       </section>
 
       {/* Hero Promo Banner */}
       <section className="promo-banner-card">
         <div className="promo-banner-content">
           <h2>Book OPD Card Online<br />and Skip the Queue!</h2>
-          <button
+          <motion.button
             type="button"
             className="btn-book-now"
             onClick={() => onNavigate('book')}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
             <span>Book Now</span>
             <ArrowRight size={16} />
-          </button>
+          </motion.button>
         </div>
 
         <div className="promo-banner-illustration">
@@ -94,9 +123,9 @@ export function PatientHomeDashboard({
 
         <div className="quick-services-grid">
           {/* Service 1: Nearby Hospitals */}
-          <button
-            type="button"
+          <CardSpotlight
             className="quick-service-card"
+            spotlightColor="rgba(37, 99, 235, 0.1)"
             onClick={() => onNavigate('nearby')}
           >
             <div className="service-icon-box bg-blue">
@@ -104,12 +133,12 @@ export function PatientHomeDashboard({
             </div>
             <span className="service-title">Nearby Hospitals</span>
             <span className="service-sub">Find verified care near you</span>
-          </button>
+          </CardSpotlight>
 
           {/* Service 2: OPD Booking */}
-          <button
-            type="button"
+          <CardSpotlight
             className="quick-service-card"
+            spotlightColor="rgba(6, 182, 212, 0.1)"
             onClick={() => onNavigate('book')}
           >
             <div className="service-icon-box bg-cyan">
@@ -117,12 +146,12 @@ export function PatientHomeDashboard({
             </div>
             <span className="service-title">OPD Booking</span>
             <span className="service-sub">Instant token reservation</span>
-          </button>
+          </CardSpotlight>
 
           {/* Service 3: Live Queue */}
-          <button
-            type="button"
+          <CardSpotlight
             className="quick-service-card"
+            spotlightColor="rgba(99, 102, 241, 0.1)"
             onClick={() => onNavigate('queue')}
           >
             <div className="service-icon-box bg-indigo">
@@ -130,12 +159,12 @@ export function PatientHomeDashboard({
             </div>
             <span className="service-title">Live Queue</span>
             <span className="service-sub">Track wait time & turn</span>
-          </button>
+          </CardSpotlight>
 
           {/* Service 4: Emergency Finder */}
-          <button
-            type="button"
+          <CardSpotlight
             className="quick-service-card"
+            spotlightColor="rgba(239, 68, 68, 0.1)"
             onClick={() => onNavigate('emergency')}
           >
             <div className="service-icon-box bg-red">
@@ -143,9 +172,9 @@ export function PatientHomeDashboard({
             </div>
             <span className="service-title">Emergency Finder</span>
             <span className="service-sub">ICU, Oxygen & General beds</span>
-          </button>
+          </CardSpotlight>
         </div>
       </section>
-    </div>
+    </motion.div>
   )
 }

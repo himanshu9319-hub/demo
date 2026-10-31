@@ -31,7 +31,7 @@ export function DoctorPortal({ onExitToPatientPortal }) {
         doctor_name: 'Dr. Demo Rao',
         paused: false,
         bookings: [
-          { id: 'b-1', token_number: 'A-025', patient_display_name: 'Ambika Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
+          { id: 'b-1', token_number: 'A-025', patient_display_name: 'Priya Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
           { id: 'b-2', token_number: 'A-026', patient_display_name: 'Rahul Verma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:15', status: 'arrived', payment: { status: 'paid' } },
           { id: 'b-3', token_number: 'A-027', patient_display_name: 'Sunita Devi', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:30', status: 'waiting', payment: { status: 'pending' } },
           { id: 'b-4', token_number: 'A-028', patient_display_name: 'Amit Patel', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:45', status: 'waiting', payment: { status: 'paid' } },
@@ -70,7 +70,7 @@ export function DoctorPortal({ onExitToPatientPortal }) {
         doctor_name: 'Dr. Demo Rao',
         paused: false,
         bookings: [
-          { id: 'b-1', token_number: 'A-025', patient_display_name: 'Ambika Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
+          { id: 'b-1', token_number: 'A-025', patient_display_name: 'Priya Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
           { id: 'b-2', token_number: 'A-026', patient_display_name: 'Rahul Verma', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:15', status: 'arrived', payment: { status: 'paid' } },
           { id: 'b-3', token_number: 'A-027', patient_display_name: 'Sunita Devi', department_name: 'General Medicine', doctor_name: 'Dr. Demo Rao', appointment_date: date, slot_time: '09:30', status: 'waiting', payment: { status: 'pending' } },
         ]

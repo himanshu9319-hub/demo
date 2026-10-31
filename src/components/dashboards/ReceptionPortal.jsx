@@ -31,7 +31,7 @@ export function ReceptionPortal({ onExitToPatientPortal }) {
         role: 'reception',
         paused: false,
         bookings: [
-          { id: 'b-101', token_number: 'GEN-001', patient_display_name: 'Ambika Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
+          { id: 'b-101', token_number: 'GEN-001', patient_display_name: 'Rohit Verma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
           { id: 'b-102', token_number: 'GEN-002', patient_display_name: 'Rahul Verma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:15', status: 'arrived', payment: { status: 'paid' } },
           { id: 'b-103', token_number: 'CARD-001', patient_display_name: 'Kavita Singh', department_name: 'Cardiology', doctor_name: 'Dr. Neha Shah', appointment_date: date, slot_time: '09:30', status: 'waiting', payment: { status: 'paid' } },
           { id: 'b-104', token_number: 'ORTH-001', patient_display_name: 'Manoj Kumar', department_name: 'Orthopedics', doctor_name: 'Dr. Arjun Nair', appointment_date: date, slot_time: '09:45', status: 'waiting', payment: { status: 'pending' } },
@@ -69,7 +69,7 @@ export function ReceptionPortal({ onExitToPatientPortal }) {
         role: 'reception',
         paused: false,
         bookings: [
-          { id: 'b-101', token_number: 'GEN-001', patient_display_name: 'Ambika Sharma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
+          { id: 'b-101', token_number: 'GEN-001', patient_display_name: 'Rohit Verma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:00', status: 'serving', payment: { status: 'paid' } },
           { id: 'b-102', token_number: 'GEN-002', patient_display_name: 'Rahul Verma', department_name: 'General Medicine', doctor_name: 'Dr. Ananya Rao', appointment_date: date, slot_time: '09:15', status: 'arrived', payment: { status: 'paid' } },
           { id: 'b-103', token_number: 'CARD-001', patient_display_name: 'Kavita Singh', department_name: 'Cardiology', doctor_name: 'Dr. Neha Shah', appointment_date: date, slot_time: '09:30', status: 'waiting', payment: { status: 'paid' } },
         ]

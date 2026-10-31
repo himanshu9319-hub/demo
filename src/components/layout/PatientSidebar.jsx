@@ -1,6 +1,13 @@
-import { LayoutDashboard, CalendarPlus, Users, MapPin, Siren, FileText, User, LogOut, Activity } from 'lucide-react'
+import { LayoutDashboard, CalendarPlus, Users, MapPin, Siren, FileText, User, LogOut, Activity, X } from 'lucide-react'
 
-export function PatientSidebar({ activeTab, onSelectTab, onLogout, patientName = 'Ambika' }) {
+export function PatientSidebar({
+  activeTab,
+  onSelectTab,
+  onLogout,
+  patientName = 'Patient',
+  isOpen = false,
+  onClose,
+}) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'nearby', label: 'Nearby Hospitals', icon: MapPin },
@@ -11,37 +18,71 @@ export function PatientSidebar({ activeTab, onSelectTab, onLogout, patientName =
     { id: 'profile', label: 'Profile', icon: User },
   ]
 
+  const handleItemClick = (id) => {
+    onSelectTab(id)
+    onClose?.()
+  }
+
   return (
-    <aside className="patient-sidebar" aria-label="Patient navigation">
-      <div className="patient-sidebar-brand">
-        <div className="brand-logo-container">
-          <span className="brand-icon-box">
-            <Activity size={20} strokeWidth={2.5} />
-          </span>
-          <span className="brand-title">Queue<span>Free</span></span>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="sidebar-mobile-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={`patient-sidebar ${isOpen ? 'mobile-drawer-open' : ''}`} aria-label="Patient navigation">
+        <div className="patient-sidebar-brand">
+          <div className="brand-logo-container">
+            <span className="brand-icon-box">
+              <Activity size={20} strokeWidth={2.5} />
+            </span>
+            <span className="brand-title">Queue<span>Free</span></span>
+          </div>
+
+          {onClose && (
+            <button
+              type="button"
+              className="sidebar-mobile-close-btn"
+              onClick={onClose}
+              aria-label="Close menu"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
-      </div>
 
-      <nav className="patient-sidebar-nav">
-        {navItems.map(({ id, label, icon: Icon }) => (
+        <nav className="patient-sidebar-nav">
+          {navItems.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={`patient-nav-item ${activeTab === id ? 'is-active' : ''}`}
+              onClick={() => handleItemClick(id)}
+            >
+              <Icon size={18} className="nav-icon" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="patient-sidebar-footer">
           <button
-            key={id}
             type="button"
-            className={`patient-nav-item ${activeTab === id ? 'is-active' : ''}`}
-            onClick={() => onSelectTab(id)}
+            className="patient-nav-item logout-item"
+            onClick={() => {
+              onClose?.()
+              onLogout()
+            }}
           >
-            <Icon size={18} className="nav-icon" />
-            <span>{label}</span>
+            <LogOut size={18} className="nav-icon" />
+            <span>Logout</span>
           </button>
-        ))}
-      </nav>
-
-      <div className="patient-sidebar-footer">
-        <button type="button" className="patient-nav-item logout-item" onClick={onLogout}>
-          <LogOut size={18} className="nav-icon" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   )
 }

@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   Bell, MapPin, Search, ChevronDown, Stethoscope, Building2, LogOut,
-  User, CheckCircle, ShieldCheck
+  User, CheckCircle, ShieldCheck, Menu
 } from 'lucide-react'
 
 export function PatientTopBar({
   activeTab,
-  patientName = 'Ambika',
-  patientEmail = 'ambika.sharma@example.com',
+  patientName = 'Patient',
+  patientEmail = 'patient@example.com',
   patientPhone = '+91 98765 43210',
   city = 'Rishikesh, Uttarakhand',
   searchQuery = '',
@@ -15,11 +15,13 @@ export function PatientTopBar({
   onOpenLocation,
   onNavigatePortal,
   onLogout,
+  onToggleMobileMenu,
   unreadCount = 2,
 }) {
   const isDashboard = activeTab === 'dashboard'
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const firstName = patientName.trim().split(' ')[0] || 'Patient'
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -34,9 +36,18 @@ export function PatientTopBar({
   return (
     <header className="patient-topbar">
       <div className="topbar-left">
+        <button
+          type="button"
+          className="topbar-mobile-menu-btn"
+          onClick={onToggleMobileMenu}
+          aria-label="Open mobile navigation"
+        >
+          <Menu size={20} />
+        </button>
+
         {isDashboard ? (
           <div className="patient-greeting">
-            <h1>Hello, {patientName} 👋</h1>
+            <h1>Hello, {firstName} 👋</h1>
             <p className="greeting-sub">“Skip the line, save your time.”</p>
           </div>
         ) : (

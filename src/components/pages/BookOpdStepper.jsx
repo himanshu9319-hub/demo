@@ -3,6 +3,7 @@ import {
   Building2, Stethoscope, Calendar, Clock, Check, ArrowRight, ArrowLeft,
   ShieldCheck, AlertCircle, Sparkles, MapPin, Ticket, ExternalLink, RefreshCw, Star
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiRequest, createBooking, getResults, localIsoDate, patientVerifyAbha } from '../../lib/queueApi'
 import { richDepartments, richDoctors, getRandomDoctorsForDepartment } from '../../lib/appData'
 import { RazorpayPaymentCard } from '../payment/RazorpayPaymentCard'
@@ -377,7 +378,15 @@ export function BookOpdStepper({
         <div className="booking-stepper-layout">
           {/* Form Left Side */}
           <div className="booking-form-card">
-            {step === 1 && (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+              >
+                {step === 1 && (
               <div className="step-form-block">
                 <div className="step-inner-heading">
                   <h3>Choose Hospital & City</h3>
@@ -651,6 +660,8 @@ export function BookOpdStepper({
                 </div>
               </div>
             )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Right Summary Card with exact Hospital Name and City */}

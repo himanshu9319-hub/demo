@@ -1,6 +1,6 @@
 // Runtime validation coverage for hospital data and queue helpers.
 import { describe, expect, it } from 'vitest'
-import { createDoctorDirectory, distanceKm, doctorsByDept, hospitalKey, initialHospitals, navItems, opdKey } from './appData.js'
+import { createDoctorDirectory, distanceKm, doctorsByDept, hospitalKey, initialHospitals, navItems, opdKey, deriveNameFromEmail } from './appData.js'
 import { generateQrMatrix } from './qrCode.js'
 
 describe('hospital and queue helpers', () => {
@@ -45,5 +45,13 @@ describe('hospital and queue helpers', () => {
     expect(matrix[0][0]).toBe(true)
     expect(matrix[0][1]).toBe(true)
     expect(matrix[0][6]).toBe(true)
+  })
+
+  it('dynamically derives clean user name from email instead of hardcoding', () => {
+    expect(deriveNameFromEmail('priya.verma@gmail.com')).toBe('Priya Verma')
+    expect(deriveNameFromEmail('rohit_kumar@yahoo.co.in')).toBe('Rohit Kumar')
+    expect(deriveNameFromEmail('ananya@example.com')).toBe('Ananya')
+    expect(deriveNameFromEmail('rajesh123@hospital.org')).toBe('Rajesh')
+    expect(deriveNameFromEmail('', 'Fallback User')).toBe('Fallback User')
   })
 })

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, X, LayoutDashboard, CalendarPlus, Users, MapPin, User, Siren, FileText } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+import { useLenisSmoothScroll } from './lib/lenisSmoothScroll'
+import { PageTransition } from './components/ui/AceternityCards'
 
 // Layout components
 import { PatientSidebar } from './components/layout/PatientSidebar'
@@ -26,13 +29,20 @@ import { LocationPanel } from './components/LocationPanel'
 // Data & Helpers
 import {
   initialHospitals, departments, doctorsByDept, createDoctorDirectory,
-  hospitalKey, opdKey, loadJson, persistJson, PHOTON_API, distanceKm
+  hospitalKey, opdKey, loadJson, persistJson, PHOTON_API, distanceKm,
+  deriveNameFromEmail
 } from './lib/appData'
 import { getResults, patientPhoneLogin, setApiAccessToken } from './lib/queueApi'
 
 export function App() {
+  // Lenis smooth inertia scrolling
+  useLenisSmoothScroll()
+
   // Opening entrance animation state: triggers on website start
   const [showIntro, setShowIntro] = useState(true)
+
+  // Mobile sidebar drawer toggle
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   // Portal Mode: 'patient' | 'doctor' | 'reception'
   const [portalMode, setPortalMode] = useState(() => {
@@ -261,19 +271,20 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Patient Login Handler with Phone AND Email (No ABHA at Start!)
+  // Patient Login Handler with Phone AND Email (Dynamic User Name!)
   const handlePatientLogin = async ({ phone, email, name }) => {
-    const userEmail = email || 'ambika.sharma@example.com'
-    const userName = name || 'Ambika Sharma'
+    const userEmail = email || 'patient@example.com'
+    const userName = name || deriveNameFromEmail(userEmail, 'Patient User')
     try {
       const session = await patientPhoneLogin(phone, userName, userEmail)
       setApiAccessToken(session.access)
-      setPatientSession({ ...session, phone, email: userEmail, name: userName })
+      const finalName = session.display_name || userName
+      setPatientSession({ ...session, phone, email: userEmail, name: finalName })
       if (session.abha_verified) {
         setPatientAbhaVerified(true)
         setPatientAbhaId(session.abha_id)
       }
-      setToast(`Welcome, ${userName}! Signed in successfully.`)
+      setToast(`Welcome, ${finalName}! Signed in successfully.`)
       setTab('dashboard')
     } catch {
       // Offline fallback session
@@ -385,11 +396,11 @@ export function App() {
         <LandingPage
           onLoginSuccess={handlePatientLogin}
           onExploreHospitals={() => {
-            // Guest demo access
+            // Guest explore access
             handlePatientLogin({
               phone: '+919876543210',
-              email: 'ambika.sharma@example.com',
-              name: 'Ambika Sharma'
+              email: 'guest.patient@example.com',
+              name: 'Guest Patient'
             })
             setTab('nearby')
           }}
@@ -406,93 +417,156 @@ export function App() {
     )
   }
 
-  // Logged-in Patient View with Midnight Navy Sidebar
+  // Logged-in Patient View with Dynamic User Profile & Responsive Nav
+  const patientDisplayName = patientSession?.name || deriveNameFromEmail(patientSession?.email, 'Patient')
+  const patientEmail = patientSession?.email || 'patient@example.com'
+  const patientPhone = patientSession?.phone || '+91 98765 43210'
+
   return (
     <div className="patient-app-wrapper">
-      {/* Left Sidebar */}
+      {/* Left Sidebar (Desktop + Mobile Slide-out Drawer) */}
       <PatientSidebar
         activeTab={tab}
         onSelectTab={setTab}
         onLogout={handlePatientLogout}
-        patientName={patientSession.name || 'Ambika'}
+        patientName={patientDisplayName}
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
       />
 
       {/* Main Content Area */}
       <div className="patient-main-view">
         <PatientTopBar
           activeTab={tab}
-          patientName={patientSession.name || 'Ambika'}
-          patientEmail={patientSession.email || 'ambika.sharma@example.com'}
-          patientPhone={patientSession.phone || '+91 98765 43210'}
+          patientName={patientDisplayName}
+          patientEmail={patientEmail}
+          patientPhone={patientPhone}
           city={city}
           searchQuery={search}
           onSearchChange={setSearch}
           onOpenLocation={() => setTab('nearby')}
           onNavigatePortal={setPortalMode}
           onLogout={handlePatientLogout}
+          onToggleMobileMenu={() => setMobileSidebarOpen(true)}
         />
 
         <main className="patient-page-body">
-          {tab === 'dashboard' && (
-            <PatientHomeDashboard
-              onNavigate={setTab}
-              bookings={apiBookings}
-              activeToken={token}
-              hospitalsCount={liveHospitals.length || 12}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <PageTransition tabKey={tab}>
+              {tab === 'dashboard' && (
+                <PatientHomeDashboard
+                  onNavigate={setTab}
+                  bookings={apiBookings}
+                  activeToken={token}
+                  hospitalsCount={liveHospitals.length || 12}
+                />
+              )}
 
-          {tab === 'nearby' && (
-            <NearbyPage {...pageProps} />
-          )}
+              {tab === 'nearby' && (
+                <NearbyPage {...pageProps} />
+              )}
 
-          {tab === 'book' && (
-            <BookOpdStepper
-              selectedHospital={selectedHospital}
-              onConfirmed={onApiBookingConfirmed}
-              onViewLocation={openHospitalLocation}
-              patientAbhaVerified={patientAbhaVerified}
-              onAbhaVerifiedSuccess={handleAbhaVerifiedSuccess}
-              city={city}
-              onNavigate={setTab}
-            />
-          )}
+              {tab === 'book' && (
+                <BookOpdStepper
+                  selectedHospital={selectedHospital}
+                  onConfirmed={onApiBookingConfirmed}
+                  onViewLocation={openHospitalLocation}
+                  patientAbhaVerified={patientAbhaVerified}
+                  onAbhaVerifiedSuccess={handleAbhaVerifiedSuccess}
+                  city={city}
+                  onNavigate={setTab}
+                />
+              )}
 
-          {tab === 'queue' && (
-            <LiveQueueTracking
-              bookings={apiBookings}
-              activeToken={token}
-              onCancelBooking={() => { setToken(null); setToast('Token cancelled'); }}
-              onNavigate={setTab}
-              onViewLocation={openHospitalLocation}
-              refreshBookings={refreshPatientBookings}
-            />
-          )}
+              {tab === 'queue' && (
+                <LiveQueueTracking
+                  bookings={apiBookings}
+                  activeToken={token}
+                  patientName={patientDisplayName}
+                  onCancelBooking={() => { setToken(null); setToast('Token cancelled'); }}
+                  onNavigate={setTab}
+                  onViewLocation={openHospitalLocation}
+                  refreshBookings={refreshPatientBookings}
+                />
+              )}
 
-          {tab === 'emergency' && (
-            <EmergencyBedFinder
-              onViewLocation={openHospitalLocation}
-            />
-          )}
+              {tab === 'emergency' && (
+                <EmergencyBedFinder
+                  onViewLocation={openHospitalLocation}
+                />
+              )}
 
-          {tab === 'records' && (
-            <HealthRecords
-              bookings={apiBookings}
-              patientName={patientSession.name || 'Ambika Sharma'}
-            />
-          )}
+              {tab === 'records' && (
+                <HealthRecords
+                  bookings={apiBookings}
+                  patientName={patientDisplayName}
+                />
+              )}
 
-          {tab === 'profile' && (
-            <PatientProfile
-              patientName={patientSession.name || 'Ambika Sharma'}
-              phone={patientSession.phone || '+91 98765 43210'}
-              abhaVerified={patientAbhaVerified}
-              abhaId={patientAbhaId}
-              onVerifyAbha={handleAbhaVerifiedSuccess}
-            />
-          )}
+              {tab === 'profile' && (
+                <PatientProfile
+                  patientName={patientDisplayName}
+                  phone={patientPhone}
+                  email={patientEmail}
+                  abhaVerified={patientAbhaVerified}
+                  abhaId={patientAbhaId}
+                  onVerifyAbha={handleAbhaVerifiedSuccess}
+                />
+              )}
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
+
+      {/* Sleek Mobile Bottom Navigation Bar (For Phones & Tablets) */}
+      <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
+        <button
+          type="button"
+          className={`mobile-tab-btn ${tab === 'dashboard' ? 'is-active' : ''}`}
+          onClick={() => setTab('dashboard')}
+        >
+          <LayoutDashboard size={20} />
+          <span>Home</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-tab-btn ${tab === 'nearby' ? 'is-active' : ''}`}
+          onClick={() => setTab('nearby')}
+        >
+          <MapPin size={20} />
+          <span>Hospitals</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-tab-btn book-tab ${tab === 'book' ? 'is-active' : ''}`}
+          onClick={() => setTab('book')}
+        >
+          <div className="book-circle-icon">
+            <CalendarPlus size={20} />
+          </div>
+          <span>Book OPD</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-tab-btn ${tab === 'queue' ? 'is-active' : ''}`}
+          onClick={() => setTab('queue')}
+        >
+          <Users size={20} />
+          <span>Live Queue</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-tab-btn ${tab === 'profile' ? 'is-active' : ''}`}
+          onClick={() => setTab('profile')}
+        >
+          <User size={20} />
+          <span>Profile</span>
+        </button>
+      </nav>
 
       {/* Location Drawer when requested */}
       {locationHospital && (

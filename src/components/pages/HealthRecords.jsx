@@ -1,6 +1,6 @@
 import { FileText, Download, Calendar, Hospital, CheckCircle, Clock } from 'lucide-react'
 
-export function HealthRecords({ bookings = [], patientName = 'Ambika Sharma' }) {
+export function HealthRecords({ bookings = [], patientName = 'Patient User' }) {
   const sampleRecords = [
     {
       id: 'REC-2026-081',

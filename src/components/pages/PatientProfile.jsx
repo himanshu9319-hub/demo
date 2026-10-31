@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { User, Phone, ShieldCheck, Mail, MapPin, CheckCircle, Sparkles, AlertCircle } from 'lucide-react'
 
 export function PatientProfile({
-  patientName = 'Ambika Sharma',
+  patientName = 'Patient User',
   phone = '+91 98765 43210',
+  email = 'patient@example.com',
   abhaVerified = false,
   abhaId = '',
   onVerifyAbha,
@@ -51,7 +52,7 @@ export function PatientProfile({
             </div>
             <div className="profile-field-row">
               <span className="field-lbl"><Mail size={15} /> Email Address</span>
-              <strong className="field-val">ambika.sharma@example.test</strong>
+              <strong className="field-val">{email}</strong>
             </div>
             <div className="profile-field-row">
               <span className="field-lbl"><MapPin size={15} /> Preferred City</span>

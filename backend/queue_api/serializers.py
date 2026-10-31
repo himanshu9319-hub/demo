@@ -133,8 +133,8 @@ class DemoPatientLoginSerializer(serializers.Serializer):
 
 class PatientPhoneLoginSerializer(serializers.Serializer):
     phone = serializers.RegexField(r"^\+[1-9][0-9]{7,14}$", max_length=16)
-    name = serializers.CharField(max_length=120, required=False, default="Ambika Sharma")
-    email = serializers.EmailField(required=False, allow_blank=True, default="ambika.sharma@example.com")
+    name = serializers.CharField(max_length=120, required=False, default="")
+    email = serializers.EmailField(required=False, allow_blank=True, default="")
 
 
 class PatientVerifyAbhaSerializer(serializers.Serializer):

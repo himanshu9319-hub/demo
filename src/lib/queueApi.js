@@ -49,7 +49,7 @@ export async function patientDemoLogin(identifier, phone, whatsappConsent) {
   })
 }
 
-export async function patientPhoneLogin(phone, name = 'Ambika Sharma', email = 'ambika.sharma@example.com') {
+export async function patientPhoneLogin(phone, name = 'Patient User', email = 'patient@example.com') {
   return apiRequest('/auth/patient/phone/', {
     method: 'POST',
     body: { phone, name, email },

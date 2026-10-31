@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import {
   Activity, ArrowRight, Building, Calendar, HeartPulse, Phone, Mail, ShieldCheck,
-  Stethoscope, Users, Building2, Check, AlertCircle, Sparkles
+  Stethoscope, Users, Building2, Check, AlertCircle, Sparkles, User, Menu, X
 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { deriveNameFromEmail } from '../../lib/appData'
+import { CardSpotlight } from '../ui/AceternityCards'
 
 export function LandingPage({
   onLoginSuccess,
@@ -12,11 +15,27 @@ export function LandingPage({
 }) {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [nameCustomized, setNameCustomized] = useState(false)
   const [otpStep, setOtpStep] = useState(false)
   const [otp, setOtp] = useState('')
   const [generatedOtp, setGeneratedOtp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const handleEmailChange = (val) => {
+    setEmail(val)
+    if (!nameCustomized) {
+      const derived = deriveNameFromEmail(val, '')
+      setFullName(derived)
+    }
+  }
+
+  const handleNameChange = (val) => {
+    setFullName(val)
+    setNameCustomized(true)
+  }
 
   const handleRequestOtp = (e) => {
     e?.preventDefault()
@@ -52,8 +71,9 @@ export function LandingPage({
     setLoading(true)
     try {
       const cleanPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '').slice(-10)}`
-      const userEmail = email.trim() || 'ambika.sharma@example.com'
-      await onLoginSuccess({ phone: cleanPhone, email: userEmail, name: 'Ambika Sharma' })
+      const userEmail = email.trim() || 'patient@example.com'
+      const userName = fullName.trim() || deriveNameFromEmail(userEmail, 'Patient User')
+      await onLoginSuccess({ phone: cleanPhone, email: userEmail, name: userName })
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')
     } finally {
@@ -67,8 +87,8 @@ export function LandingPage({
     try {
       await onLoginSuccess({
         phone: '+919876543210',
-        email: 'ambika.sharma@example.com',
-        name: 'Ambika Sharma'
+        email: 'priya.sharma@example.com',
+        name: 'Priya Sharma'
       })
     } catch (err) {
       setError(err.message || 'Quick login failed.')
@@ -116,8 +136,47 @@ export function LandingPage({
               <Building2 size={15} />
               <span>Reception Desk</span>
             </button>
+
+            {/* Mobile Nav Hamburger Toggle */}
+            <button
+              type="button"
+              className="mobile-hamburger-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Drawer for Phones & Tablets */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-drawer">
+            <div className="mobile-drawer-links">
+              <a href="#home" className="active" onClick={() => setMobileMenuOpen(false)}>Home</a>
+              <a href="#hospitals" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals() }}>Explore Hospitals</a>
+              <a href="#services" onClick={() => setMobileMenuOpen(false)}>OPD Services</a>
+            </div>
+            <div className="mobile-drawer-portals">
+              <button
+                type="button"
+                className="mobile-portal-btn doctor"
+                onClick={() => { setMobileMenuOpen(false); onOpenDoctorPortal() }}
+              >
+                <Stethoscope size={16} />
+                <span>Doctor OPD Console</span>
+              </button>
+              <button
+                type="button"
+                className="mobile-portal-btn reception"
+                onClick={() => { setMobileMenuOpen(false); onOpenReceptionPortal() }}
+              >
+                <Building2 size={16} />
+                <span>Reception Desk</span>
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Main Hero Section */}
@@ -186,9 +245,12 @@ export function LandingPage({
             </div>
           </div>
 
-          {/* Right Column: Clean Login Card with Mobile Number AND Email */}
+          {/* Right Column: Clean Login Card with Aceternity Spotlight */}
           <div className="landing-hero-right">
-            <div className="hero-login-card login-card-animated">
+            <CardSpotlight
+              className="hero-login-card login-card-animated"
+              spotlightColor="rgba(37, 99, 235, 0.12)"
+            >
               <div className="login-card-header">
                 <h2>Welcome to <span>QueueFree</span></h2>
                 <p>Login with your mobile & email to manage OPD appointments.</p>
@@ -223,9 +285,27 @@ export function LandingPage({
                         type="email"
                         placeholder="Enter email address (e.g. name@example.com)"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => handleEmailChange(e.target.value)}
                         autoComplete="email"
                         required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Full Name Field (Auto-updates with email, fully editable) */}
+                  <div className="form-group">
+                    <label htmlFor="fullname-login-input">
+                      Patient Name <span className="label-sub-hint">(Auto-fills from email)</span>
+                    </label>
+                    <div className="input-with-icon">
+                      <User size={16} className="input-icon" />
+                      <input
+                        id="fullname-login-input"
+                        type="text"
+                        placeholder="Your full name (e.g. Priya Sharma)"
+                        value={fullName}
+                        onChange={(e) => handleNameChange(e.target.value)}
+                        autoComplete="name"
                       />
                     </div>
                   </div>
@@ -237,23 +317,31 @@ export function LandingPage({
                     </div>
                   )}
 
-                  <button type="submit" className="btn-continue-otp" disabled={loading}>
+                  <motion.button
+                    type="submit"
+                    className="btn-continue-otp"
+                    disabled={loading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
                     {loading ? 'Sending OTP…' : 'Continue with OTP'}
-                  </button>
+                  </motion.button>
 
                   <div className="login-divider">
                     <span>OR</span>
                   </div>
 
-                  <button
+                  <motion.button
                     type="button"
                     className="btn-quick-demo"
                     onClick={handleQuickDemoLogin}
                     disabled={loading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Check size={16} className="demo-check-icon" />
-                    <span>Quick Demo Patient Login (Ambika)</span>
-                  </button>
+                    <span>Quick Demo Patient Login (Priya Sharma)</span>
+                  </motion.button>
 
                   <div className="anti-scam-notice">
                     <ShieldCheck size={15} />
@@ -270,7 +358,7 @@ export function LandingPage({
                 /* Step 2: OTP verification */
                 <form onSubmit={handleVerifyOtp} className="login-form otp-form">
                   <div className="otp-step-header">
-                    <p>Enter the 6-digit code sent to <strong>{phone}</strong></p>
+                    <p>Welcome, <strong>{fullName || deriveNameFromEmail(email, 'Patient')}</strong>! Enter the 6-digit code sent to <strong>{phone}</strong></p>
                     <div className="simulated-otp-chip">
                       <span>Demo Code: <strong>{generatedOtp}</strong></span>
                       <button
@@ -303,9 +391,15 @@ export function LandingPage({
                     </div>
                   )}
 
-                  <button type="submit" className="btn-continue-otp" disabled={loading}>
+                  <motion.button
+                    type="submit"
+                    className="btn-continue-otp"
+                    disabled={loading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
                     {loading ? 'Verifying…' : 'Verify & Enter Dashboard'}
-                  </button>
+                  </motion.button>
 
                   <button
                     type="button"
@@ -316,7 +410,7 @@ export function LandingPage({
                   </button>
                 </form>
               )}
-            </div>
+            </CardSpotlight>
           </div>
         </div>
       </main>

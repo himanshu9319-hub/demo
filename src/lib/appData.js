@@ -268,6 +268,29 @@ export function persistJson(key, value) {
 
 export const PHOTON_API = 'https://photon.komoot.io'
 
+export function deriveNameFromEmail(email, fallback = 'Patient User') {
+  if (!email || typeof email !== 'string') return fallback
+  const username = email.trim().split('@')[0]
+  if (!username) return fallback
+
+  const parts = username
+    .replace(/[._+\-]+/g, ' ')
+    .replace(/\d+/g, '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (parts.length === 0) {
+    const rawClean = username.replace(/[._+\-]+/g, ' ').trim()
+    if (!rawClean) return fallback
+    return rawClean.charAt(0).toUpperCase() + rawClean.slice(1)
+  }
+
+  return parts
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+    .join(' ')
+}
+
 export function distanceKm(from, to) {
   const radians = degrees => degrees * Math.PI / 180
   const latitude = radians(to.lat - from.lat)

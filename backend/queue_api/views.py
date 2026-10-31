@@ -65,8 +65,15 @@ class PatientPhoneLoginView(APIView):
         serializer = PatientPhoneLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data["phone"]
-        name = serializer.validated_data.get("name", "Ambika Sharma")
-        email = serializer.validated_data.get("email", "ambika.sharma@example.com")
+        email = (serializer.validated_data.get("email") or "").strip()
+        name = (serializer.validated_data.get("name") or "").strip()
+
+        if not name and email:
+            user_part = email.split("@")[0].replace(".", " ").replace("_", " ").replace("-", " ")
+            name = " ".join(w.capitalize() for w in user_part.split() if not w.isdigit()) or "Patient User"
+        if not name:
+            name = "Patient User"
+
         clean_phone = "".join(ch for ch in phone if ch.isdigit())
         username = f"patient-phone-{clean_phone}"
         user, _ = User.objects.get_or_create(username=username)
@@ -77,10 +84,13 @@ class PatientPhoneLoginView(APIView):
         )
         update_fields = []
         if not created:
-            if not profile.phone:
+            if name and profile.display_name != name:
+                profile.display_name = name
+                update_fields.append("display_name")
+            if phone and profile.phone != phone:
                 profile.phone = phone
                 update_fields.append("phone")
-            if email and not profile.email:
+            if email and profile.email != email:
                 profile.email = email
                 update_fields.append("email")
             if update_fields:
