@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Activity, ArrowRight, Building, Calendar, HeartPulse, Phone, Mail, ShieldCheck,
+  Activity, ArrowRight, Calendar, HeartPulse, Phone, Mail, ShieldCheck,
   Stethoscope, Users, Building2, Check, AlertCircle, Sparkles, User, Menu, X, Lock,
   Shield
 } from 'lucide-react'
@@ -11,7 +11,6 @@ import { staffLogin, setApiAccessToken } from '../../lib/queueApi'
 
 export function LandingPage({
   onLoginSuccess,
-  onExploreHospitals,
   onDoctorLoginSuccess,
   onReceptionLoginSuccess,
 }) {
@@ -243,10 +242,9 @@ export function LandingPage({
 
           <div className="landing-nav-links">
             <a href="#home" className="active">Home</a>
-            <a href="#hospitals" onClick={(e) => { e.preventDefault(); onExploreHospitals?.('nearby') }}>Hospitals</a>
-            <a href="#services" onClick={(e) => { e.preventDefault(); onExploreHospitals?.('book') }}>Services</a>
-            <a href="#about">About</a>
-            <a href="#help">Help</a>
+            <a href="#services" onClick={(e) => { e.preventDefault(); scrollToLoginCard('patient') }}>Services</a>
+            <a href="#about" onClick={(e) => { e.preventDefault(); scrollToLoginCard('patient') }}>About</a>
+            <a href="#help" onClick={(e) => { e.preventDefault(); scrollToLoginCard('patient') }}>Help</a>
           </div>
 
           <div className="landing-nav-actions">
@@ -267,8 +265,8 @@ export function LandingPage({
           <div className="landing-mobile-drawer">
             <div className="mobile-drawer-links">
               <a href="#home" className="active" onClick={() => setMobileMenuOpen(false)}>Home</a>
-              <a href="#hospitals" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals?.('nearby') }}>Explore Hospitals</a>
-              <a href="#services" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); onExploreHospitals?.('book') }}>OPD Services</a>
+              <a href="#services" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); scrollToLoginCard('patient') }}>OPD Services</a>
+              <a href="#about" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); scrollToLoginCard('patient') }}>About</a>
             </div>
           </div>
         )}
@@ -277,9 +275,8 @@ export function LandingPage({
       {/* Main Hero Section */}
       <main className="landing-hero-section">
         <div className="landing-hero-grid">
-          {/* Left Column: Hero Copy with Exact Motto */}
+          {/* Left Column: Hero Copy with Motto */}
           <div className="landing-hero-left">
-            {/* Requested Motto Pill */}
             <div className="motto-tag-banner">
               <Sparkles size={14} className="motto-sparkle-icon" />
               <strong className="motto-highlight-text">“Skip the line, save your time.”</strong>
@@ -299,6 +296,7 @@ export function LandingPage({
               Find nearby hospitals, book OPD appointments, track live queues and access emergency services from one platform.
             </p>
 
+            {/* Hero CTA - Only Get Started, Explore Hospitals Removed */}
             <div className="hero-cta-group">
               <button
                 type="button"
@@ -313,55 +311,42 @@ export function LandingPage({
                 <span>Get Started</span>
                 <ArrowRight size={16} />
               </button>
-
-              <button
-                type="button"
-                className="btn-secondary-white"
-                onClick={() => onExploreHospitals?.('nearby')}
-              >
-                <Building size={16} />
-                <span>Explore Hospitals</span>
-              </button>
             </div>
 
             {/* Feature Pills */}
             <div className="hero-feature-pills">
-              <button
-                type="button"
+              <div
                 className="feature-pill feature-pill-btn"
-                onClick={() => onExploreHospitals?.('book')}
-                title="Book OPD Appointments Online"
+                onClick={() => scrollToLoginCard('patient')}
+                title="Online OPD Booking"
               >
                 <Calendar size={15} className="pill-icon" />
                 <span>Online OPD Booking</span>
-              </button>
-              <button
-                type="button"
+              </div>
+              <div
                 className="feature-pill feature-pill-btn"
-                onClick={() => onExploreHospitals?.('queue')}
-                title="Track Live OPD Queues"
+                onClick={() => scrollToLoginCard('patient')}
+                title="Live Queue Tracking"
               >
                 <Users size={15} className="pill-icon" />
                 <span>Live Queue Tracking</span>
-              </button>
-              <button
-                type="button"
+              </div>
+              <div
                 className="feature-pill feature-pill-btn"
-                onClick={() => onExploreHospitals?.('emergency')}
-                title="Find Emergency & ICU Beds"
+                onClick={() => scrollToLoginCard('patient')}
+                title="Emergency Bed Finder"
               >
                 <HeartPulse size={15} className="pill-icon" />
                 <span>Emergency Bed Finder</span>
-              </button>
-              <button
-                type="button"
+              </div>
+              <div
                 className="feature-pill feature-pill-btn"
-                onClick={() => onExploreHospitals?.('nearby')}
-                title="Explore Verified Hospitals"
+                onClick={() => scrollToLoginCard('patient')}
+                title="Verified Healthcare Facilities"
               >
                 <Building2 size={15} className="pill-icon" />
                 <span>Multiple Hospitals</span>
-              </button>
+              </div>
             </div>
           </div>
 

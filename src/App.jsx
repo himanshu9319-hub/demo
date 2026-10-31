@@ -441,15 +441,6 @@ export function App() {
       <>
         <LandingPage
           onLoginSuccess={handlePatientLogin}
-          onExploreHospitals={() => {
-            // Guest explore access
-            handlePatientLogin({
-              phone: '+919876543210',
-              email: 'guest.patient@example.com',
-              name: 'Guest Patient'
-            })
-            setTab('nearby')
-          }}
           onDoctorLoginSuccess={handleDoctorLogin}
           onReceptionLoginSuccess={handleReceptionLogin}
         />
