@@ -147,10 +147,10 @@ export function App() {
     }
   }, [patientSession, refreshPatientBookings])
 
-  // Geocoding and Nearby hospitals loader (kept intact as instructed)
+  // Geocoding and Nearby/Emergency hospitals loader
   useEffect(() => {
     const query = city.trim()
-    if (tab !== 'nearby' || query.length < 2 || citySelected) {
+    if ((tab !== 'nearby' && tab !== 'emergency') || query.length < 2 || citySelected) {
       setCitySuggestions([])
       return
     }
@@ -178,7 +178,7 @@ export function App() {
   }, [city, citySelected, tab])
 
   useEffect(() => {
-    if (tab !== 'nearby' || !citySelected || !cityCenter) return
+    if ((tab !== 'nearby' && tab !== 'emergency') || !citySelected || !cityCenter) return
     const controller = new AbortController()
     const timer = setTimeout(async () => {
       setHospitalLoading(true)
@@ -529,6 +529,22 @@ export function App() {
 
               {tab === 'emergency' && (
                 <EmergencyBedFinder
+                  city={city}
+                  setCity={setCity}
+                  cityCenter={cityCenter}
+                  setCityCenter={setCityCenter}
+                  citySelected={citySelected}
+                  setCitySelected={setCitySelected}
+                  citySuggestions={citySuggestions}
+                  setCitySuggestions={setCitySuggestions}
+                  useLocation={useLocation}
+                  hospitals={liveHospitals.length ? liveHospitals : initialHospitals}
+                  hospitalLoading={hospitalLoading}
+                  hospitalError={hospitalError}
+                  onBookEmergencyOpd={(h) => {
+                    bookHospital(h)
+                    setTab('book')
+                  }}
                   onViewLocation={openHospitalLocation}
                 />
               )}

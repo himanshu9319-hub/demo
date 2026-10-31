@@ -2603,12 +2603,175 @@ body {
   cursor: pointer;
 }
 
+.btn-emergency-opd {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-emergency-opd:hover {
+  background: var(--primary-blue-hover);
+}
+
+.emergency-location-toolbar {
+  background: white;
+  border: 1px solid var(--line-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.emergency-toolbar-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.emergency-city-input-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.emergency-city-input-wrap .styled-input {
+  padding-left: 38px;
+  height: 44px;
+}
+
+.emergency-city-input-wrap .input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--primary-blue);
+  pointer-events: none;
+}
+
+.btn-emergency-locate {
+  height: 44px;
+  padding: 0 16px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-emergency-locate:hover {
+  background: #dcfce7;
+}
+
+.emergency-toolbar-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.filter-group-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.range-pill-btn {
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f8fafc;
+  color: var(--text-dark);
+  border: 1px solid var(--line-border);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.range-pill-btn:hover {
+  border-color: var(--primary-blue);
+  background: #f0f7ff;
+}
+
+.range-pill-btn.active {
+  background: var(--sidebar-navy);
+  color: white;
+  border-color: var(--sidebar-navy);
+}
+
+.bed-filter-btn {
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f8fafc;
+  color: var(--text-dark);
+  border: 1px solid var(--line-border);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.bed-filter-btn:hover {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.bed-filter-btn.active {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.emergency-hospital-card.is-focused {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
 .emergency-map-card {
   background: white;
   border: 1px solid var(--line-border);
   border-radius: 18px;
   overflow: hidden;
   box-shadow: var(--card-shadow);
+  position: sticky;
+  top: 86px;
+}
+
+.emergency-map-card .map-canvas {
+  width: 100%;
+  height: 520px;
+  min-height: 440px;
 }
 
 .emergency-map-header {
