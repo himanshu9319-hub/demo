@@ -57,6 +57,9 @@ export function App() {
   const [patientAbhaVerified, setPatientAbhaVerified] = useState(() => loadJson('queuefree-abha-verified', false))
   const [patientAbhaId, setPatientAbhaId] = useState(() => loadJson('queuefree-abha-id', ''))
 
+  // Staff Authentication & Session (Doctor or Receptionist)
+  const [staffSession, setStaffSession] = useState(() => loadJson('queuefree-staff-session', null))
+
   // Active Tab for Patient Portal
   const [tab, setTab] = useState('dashboard')
 
@@ -92,6 +95,11 @@ export function App() {
     if (patientSession) persistJson('queuefree-patient-session', patientSession)
     else localStorage.removeItem('queuefree-patient-session')
   }, [patientSession])
+
+  useEffect(() => {
+    if (staffSession) persistJson('queuefree-staff-session', staffSession)
+    else localStorage.removeItem('queuefree-staff-session')
+  }, [staffSession])
 
   useEffect(() => {
     persistJson('queuefree-abha-verified', patientAbhaVerified)
@@ -301,12 +309,37 @@ export function App() {
     }
   }
 
-  // Explicit Logout Handler
+  // Explicit Logout Handler for Patients
   const handlePatientLogout = () => {
     setApiAccessToken('')
     setPatientSession(null)
     setSelectedHospital(null)
     setToast('You have been signed out safely.')
+  }
+
+  // Doctor Staff Login Handler
+  const handleDoctorLogin = (authData) => {
+    setStaffSession(authData)
+    setPortalMode('doctor')
+    if (authData?.access) setApiAccessToken(authData.access)
+    setToast(`Welcome, ${authData.display_name || authData.username || 'Doctor'}! Signed in to Doctor OPD Console.`)
+  }
+
+  // Reception Staff Login Handler
+  const handleReceptionLogin = (authData) => {
+    setStaffSession(authData)
+    setPortalMode('reception')
+    if (authData?.access) setApiAccessToken(authData.access)
+    setToast(`Welcome, ${authData.display_name || authData.username || 'Receptionist'}! Signed in to Reception Console.`)
+  }
+
+  // Staff Logout Handler (Returns cleanly to Starting Login Page)
+  const handleStaffLogout = () => {
+    setApiAccessToken('')
+    setStaffSession(null)
+    setPortalMode('patient')
+    window.history.pushState({}, '', '/')
+    setToast('Logged out of staff console safely.')
   }
 
   const handleAbhaVerifiedSuccess = (verifiedId) => {
@@ -359,38 +392,51 @@ export function App() {
   }
 
   // =========================================================================
-  // ROUTE 1: DOCTOR PORTAL (/doctor)
+  // ROUTE 1: DOCTOR PORTAL (/doctor) - Doctor Only
   // =========================================================================
-  if (portalMode === 'doctor') {
+  if (portalMode === 'doctor' || staffSession?.role === 'doctor') {
     return (
-      <DoctorPortal
-        onExitToPatientPortal={() => {
-          setPortalMode('patient')
-          window.history.pushState({}, '', '/')
-        }}
-      />
+      <>
+        <DoctorPortal
+          initialAuth={staffSession}
+          onLogout={handleStaffLogout}
+          onExitToPatientPortal={handleStaffLogout}
+        />
+        {toast && (
+          <div className="toast" role="status">
+            <Check size={16} />
+            <span>{toast}</span>
+          </div>
+        )}
+      </>
     )
   }
 
   // =========================================================================
-  // ROUTE 2: RECEPTION PORTAL (/reception)
+  // ROUTE 2: RECEPTION PORTAL (/reception) - Receptionist Only
   // =========================================================================
-  if (portalMode === 'reception') {
+  if (portalMode === 'reception' || ['reception', 'hospital_admin'].includes(staffSession?.role)) {
     return (
-      <ReceptionPortal
-        onExitToPatientPortal={() => {
-          setPortalMode('patient')
-          window.history.pushState({}, '', '/')
-        }}
-      />
+      <>
+        <ReceptionPortal
+          initialAuth={staffSession}
+          onLogout={handleStaffLogout}
+          onExitToPatientPortal={handleStaffLogout}
+        />
+        {toast && (
+          <div className="toast" role="status">
+            <Check size={16} />
+            <span>{toast}</span>
+          </div>
+        )}
+      </>
     )
   }
 
   // =========================================================================
-  // ROUTE 3: PATIENT PORTAL
+  // ROUTE 3: STARTING LOGIN PAGE (Role Selection: Patient / Doctor / Receptionist)
   // =========================================================================
   if (!patientSession) {
-    // Panel 1: Landing Page with Phone & Email Login + Motto
     return (
       <>
         <LandingPage
@@ -404,8 +450,8 @@ export function App() {
             })
             setTab('nearby')
           }}
-          onOpenDoctorPortal={() => setPortalMode('doctor')}
-          onOpenReceptionPortal={() => setPortalMode('reception')}
+          onDoctorLoginSuccess={handleDoctorLogin}
+          onReceptionLoginSuccess={handleReceptionLogin}
         />
         {toast && (
           <div className="toast" role="status">
@@ -445,7 +491,6 @@ export function App() {
           searchQuery={search}
           onSearchChange={setSearch}
           onOpenLocation={() => setTab('nearby')}
-          onNavigatePortal={setPortalMode}
           onLogout={handlePatientLogout}
           onToggleMobileMenu={() => setMobileSidebarOpen(true)}
         />

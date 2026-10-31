@@ -5,10 +5,10 @@ import {
 } from 'lucide-react'
 import { apiRequest, localIsoDate, setApiAccessToken, staffLogin } from '../../lib/queueApi'
 
-export function DoctorPortal({ onExitToPatientPortal }) {
+export function DoctorPortal({ onExitToPatientPortal, onLogout, initialAuth = null }) {
   const [username, setUsername] = useState('doctor.demo')
   const [password, setPassword] = useState('DoctorDemo@123')
-  const [auth, setAuth] = useState(null)
+  const [auth, setAuth] = useState(initialAuth)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -84,6 +84,11 @@ export function DoctorPortal({ onExitToPatientPortal }) {
     setApiAccessToken('')
     setAuth(null)
     setData(null)
+    if (onLogout) {
+      onLogout()
+    } else if (onExitToPatientPortal) {
+      onExitToPatientPortal()
+    }
   }
 
   const handleAction = async (booking, action) => {
@@ -159,10 +164,11 @@ export function DoctorPortal({ onExitToPatientPortal }) {
         <button
           type="button"
           className="portal-exit-btn"
-          onClick={onExitToPatientPortal}
+          onClick={handleLogout}
+          title="Sign out of Doctor OPD Console"
         >
-          <ArrowLeft size={16} />
-          <span>Exit to Patient Website</span>
+          <LogOut size={16} />
+          <span>Logout</span>
         </button>
       </header>
 

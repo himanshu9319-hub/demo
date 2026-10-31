@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  Bell, MapPin, Search, ChevronDown, Stethoscope, Building2, LogOut,
+  Bell, MapPin, Search, ChevronDown, LogOut,
   User, CheckCircle, ShieldCheck, Menu
 } from 'lucide-react'
 
@@ -13,7 +13,6 @@ export function PatientTopBar({
   searchQuery = '',
   onSearchChange,
   onOpenLocation,
-  onNavigatePortal,
   onLogout,
   onToggleMobileMenu,
   unreadCount = 2,
@@ -73,28 +72,6 @@ export function PatientTopBar({
       </div>
 
       <div className="topbar-right">
-        {/* Quick Portal Switchers */}
-        <div className="portal-switchers">
-          <button
-            type="button"
-            className="portal-badge-btn"
-            onClick={() => onNavigatePortal('doctor')}
-            title="Switch to Doctor Dashboard"
-          >
-            <Stethoscope size={14} />
-            <span>Doctor Portal</span>
-          </button>
-          <button
-            type="button"
-            className="portal-badge-btn"
-            onClick={() => onNavigatePortal('reception')}
-            title="Switch to Reception Desk"
-          >
-            <Building2 size={14} />
-            <span>Reception Desk</span>
-          </button>
-        </div>
-
         {/* Notifications */}
         <button type="button" className="topbar-icon-btn notification-btn" aria-label="Notifications">
           <Bell size={18} />

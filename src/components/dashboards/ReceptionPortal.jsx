@@ -5,10 +5,10 @@ import {
 } from 'lucide-react'
 import { apiRequest, localIsoDate, setApiAccessToken, staffLogin } from '../../lib/queueApi'
 
-export function ReceptionPortal({ onExitToPatientPortal }) {
+export function ReceptionPortal({ onExitToPatientPortal, onLogout, initialAuth = null }) {
   const [username, setUsername] = useState('reception.demo')
   const [password, setPassword] = useState('ReceptionDemo@123')
-  const [auth, setAuth] = useState(null)
+  const [auth, setAuth] = useState(initialAuth)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -83,6 +83,11 @@ export function ReceptionPortal({ onExitToPatientPortal }) {
     setApiAccessToken('')
     setAuth(null)
     setData(null)
+    if (onLogout) {
+      onLogout()
+    } else if (onExitToPatientPortal) {
+      onExitToPatientPortal()
+    }
   }
 
   const handleAction = async (booking, action) => {
@@ -150,10 +155,11 @@ export function ReceptionPortal({ onExitToPatientPortal }) {
         <button
           type="button"
           className="portal-exit-btn"
-          onClick={onExitToPatientPortal}
+          onClick={handleLogout}
+          title="Sign out of Reception Desk"
         >
-          <ArrowLeft size={16} />
-          <span>Exit to Patient Website</span>
+          <LogOut size={16} />
+          <span>Logout</span>
         </button>
       </header>
 

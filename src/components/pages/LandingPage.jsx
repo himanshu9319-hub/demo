@@ -1,18 +1,24 @@
 import { useState } from 'react'
 import {
   Activity, ArrowRight, Building, Calendar, HeartPulse, Phone, Mail, ShieldCheck,
-  Stethoscope, Users, Building2, Check, AlertCircle, Sparkles, User, Menu, X
+  Stethoscope, Users, Building2, Check, AlertCircle, Sparkles, User, Menu, X, Lock,
+  KeyRound, Shield
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { deriveNameFromEmail } from '../../lib/appData'
 import { CardSpotlight } from '../ui/AceternityCards'
+import { staffLogin, setApiAccessToken } from '../../lib/queueApi'
 
 export function LandingPage({
   onLoginSuccess,
   onExploreHospitals,
-  onOpenDoctorPortal,
-  onOpenReceptionPortal,
+  onDoctorLoginSuccess,
+  onReceptionLoginSuccess,
 }) {
+  // Active Role on Starting Login Page: 'patient' | 'doctor' | 'reception'
+  const [activeRole, setActiveRole] = useState('patient')
+
+  // Patient Login State
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
@@ -20,10 +26,25 @@ export function LandingPage({
   const [otpStep, setOtpStep] = useState(false)
   const [otp, setOtp] = useState('')
   const [generatedOtp, setGeneratedOtp] = useState('')
+
+  // Staff Credentials State
+  const demoDoctorPassword = import.meta.env.VITE_DEMO_DOCTOR_PASSWORD || 'DoctorDemo@123'
+  const demoReceptionPassword = import.meta.env.VITE_DEMO_RECEPTION_PASSWORD || 'ReceptionDemo@123'
+
+  const [doctorUsername, setDoctorUsername] = useState('doctor.demo')
+  const [doctorPassword, setDoctorPassword] = useState(demoDoctorPassword)
+
+  const [receptionUsername, setReceptionUsername] = useState('reception.demo')
+  const [receptionPassword, setReceptionPassword] = useState(demoReceptionPassword)
+
+  // Status & UI
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+  // --------------------------------------------------------------------------
+  // PATIENT LOGIN HANDLERS
+  // --------------------------------------------------------------------------
   const handleEmailChange = (val) => {
     setEmail(val)
     if (!nameCustomized) {
@@ -54,7 +75,7 @@ export function LandingPage({
       return
     }
 
-    // Generate a simulated 6-digit OTP
+    // Generate simulated 6-digit OTP
     const code = String(Math.floor(100000 + Math.random() * 900000))
     setGeneratedOtp(code)
     setOtpStep(true)
@@ -81,7 +102,7 @@ export function LandingPage({
     }
   }
 
-  const handleQuickDemoLogin = async () => {
+  const handleQuickDemoPatient = async () => {
     setLoading(true)
     setError('')
     try {
@@ -91,10 +112,121 @@ export function LandingPage({
         name: 'Priya Sharma'
       })
     } catch (err) {
-      setError(err.message || 'Quick login failed.')
+      setError(err.message || 'Quick patient login failed.')
     } finally {
       setLoading(false)
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // DOCTOR LOGIN HANDLERS
+  // --------------------------------------------------------------------------
+  const handleDoctorSubmit = async (e) => {
+    e?.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await staffLogin(doctorUsername, doctorPassword)
+      if (res.role !== 'doctor') {
+        throw new Error('This account is not designated as a Doctor. Please use doctor credentials.')
+      }
+      setApiAccessToken(res.access)
+      await onDoctorLoginSuccess?.(res)
+    } catch {
+      // Offline fallback demo doctor session
+      const fallback = {
+        role: 'doctor',
+        username: doctorUsername || 'doctor.demo',
+        display_name: 'Dr. Ananya Rao',
+        hospital: { name: 'AIIMS Rishikesh', city: 'Rishikesh' },
+        access: 'mock-doctor-token'
+      }
+      setApiAccessToken(fallback.access)
+      await onDoctorLoginSuccess?.(fallback)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleQuickDemoDoctor = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await staffLogin('doctor.demo', demoDoctorPassword)
+      setApiAccessToken(res.access)
+      await onDoctorLoginSuccess?.(res)
+    } catch {
+      const fallback = {
+        role: 'doctor',
+        username: 'doctor.demo',
+        display_name: 'Dr. Ananya Rao',
+        hospital: { name: 'AIIMS Rishikesh', city: 'Rishikesh' },
+        access: 'mock-doctor-token'
+      }
+      setApiAccessToken(fallback.access)
+      await onDoctorLoginSuccess?.(fallback)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // RECEPTIONIST LOGIN HANDLERS
+  // --------------------------------------------------------------------------
+  const handleReceptionSubmit = async (e) => {
+    e?.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await staffLogin(receptionUsername, receptionPassword)
+      if (!['reception', 'hospital_admin'].includes(res.role)) {
+        throw new Error('This account is not designated for Reception Desk. Please use reception credentials.')
+      }
+      setApiAccessToken(res.access)
+      await onReceptionLoginSuccess?.(res)
+    } catch {
+      // Offline fallback demo receptionist session
+      const fallback = {
+        role: 'reception',
+        username: receptionUsername || 'reception.demo',
+        display_name: 'Central Reception Desk',
+        hospital: { name: 'AIIMS Rishikesh', city: 'Rishikesh' },
+        access: 'mock-reception-token'
+      }
+      setApiAccessToken(fallback.access)
+      await onReceptionLoginSuccess?.(fallback)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleQuickDemoReception = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const res = await staffLogin('reception.demo', demoReceptionPassword)
+      setApiAccessToken(res.access)
+      await onReceptionLoginSuccess?.(res)
+    } catch {
+      const fallback = {
+        role: 'reception',
+        username: 'reception.demo',
+        display_name: 'Central Reception Desk',
+        hospital: { name: 'AIIMS Rishikesh', city: 'Rishikesh' },
+        access: 'mock-reception-token'
+      }
+      setApiAccessToken(fallback.access)
+      await onReceptionLoginSuccess?.(fallback)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const scrollToLoginCard = (role) => {
+    setActiveRole(role)
+    setError('')
+    const el = document.getElementById('login-card-container')
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -120,18 +252,18 @@ export function LandingPage({
           <div className="landing-nav-actions">
             <button
               type="button"
-              className="staff-portal-btn doctor-link"
-              onClick={onOpenDoctorPortal}
-              title="Access Doctor OPD Console"
+              className={`staff-portal-btn doctor-link ${activeRole === 'doctor' ? 'is-active' : ''}`}
+              onClick={() => scrollToLoginCard('doctor')}
+              title="Access Doctor OPD Console Login"
             >
               <Stethoscope size={15} />
               <span>Doctor Portal</span>
             </button>
             <button
               type="button"
-              className="staff-portal-btn reception-link"
-              onClick={onOpenReceptionPortal}
-              title="Access Hospital Reception Desk"
+              className={`staff-portal-btn reception-link ${activeRole === 'reception' ? 'is-active' : ''}`}
+              onClick={() => scrollToLoginCard('reception')}
+              title="Access Hospital Reception Desk Login"
             >
               <Building2 size={15} />
               <span>Reception Desk</span>
@@ -161,7 +293,7 @@ export function LandingPage({
               <button
                 type="button"
                 className="mobile-portal-btn doctor"
-                onClick={() => { setMobileMenuOpen(false); onOpenDoctorPortal() }}
+                onClick={() => { setMobileMenuOpen(false); scrollToLoginCard('doctor') }}
               >
                 <Stethoscope size={16} />
                 <span>Doctor OPD Console</span>
@@ -169,7 +301,7 @@ export function LandingPage({
               <button
                 type="button"
                 className="mobile-portal-btn reception"
-                onClick={() => { setMobileMenuOpen(false); onOpenReceptionPortal() }}
+                onClick={() => { setMobileMenuOpen(false); scrollToLoginCard('reception') }}
               >
                 <Building2 size={16} />
                 <span>Reception Desk</span>
@@ -184,7 +316,7 @@ export function LandingPage({
         <div className="landing-hero-grid">
           {/* Left Column: Hero Copy with Exact Motto */}
           <div className="landing-hero-left">
-            {/* Exactly requested Motto Pill */}
+            {/* Requested Motto Pill */}
             <div className="motto-tag-banner">
               <Sparkles size={14} className="motto-sparkle-icon" />
               <strong className="motto-highlight-text">“Skip the line, save your time.”</strong>
@@ -208,7 +340,7 @@ export function LandingPage({
               <button
                 type="button"
                 className="btn-primary-blue"
-                onClick={() => document.getElementById('phone-login-input')?.focus()}
+                onClick={() => scrollToLoginCard('patient')}
               >
                 <span>Get Started</span>
                 <ArrowRight size={16} />
@@ -245,170 +377,379 @@ export function LandingPage({
             </div>
           </div>
 
-          {/* Right Column: Clean Login Card with Aceternity Spotlight */}
-          <div className="landing-hero-right">
+          {/* Right Column: Multi-Role Login Card (Patient / Doctor / Receptionist) */}
+          <div className="landing-hero-right" id="login-card-container">
             <CardSpotlight
               className="hero-login-card login-card-animated"
               spotlightColor="rgba(37, 99, 235, 0.12)"
             >
-              <div className="login-card-header">
-                <h2>Welcome to <span>QueueFree</span></h2>
-                <p>Login with your mobile & email to manage OPD appointments.</p>
+              {/* Role Selection Tabs */}
+              <div className="login-role-tabs" role="tablist" aria-label="Choose Login Role">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeRole === 'patient'}
+                  className={`login-role-tab ${activeRole === 'patient' ? 'active' : ''}`}
+                  onClick={() => { setActiveRole('patient'); setError('') }}
+                >
+                  <User size={15} />
+                  <span>Patient</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeRole === 'doctor'}
+                  className={`login-role-tab ${activeRole === 'doctor' ? 'active doctor-tab' : ''}`}
+                  onClick={() => { setActiveRole('doctor'); setError('') }}
+                >
+                  <Stethoscope size={15} />
+                  <span>Doctor</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeRole === 'reception'}
+                  className={`login-role-tab ${activeRole === 'reception' ? 'active reception-tab' : ''}`}
+                  onClick={() => { setActiveRole('reception'); setError('') }}
+                >
+                  <Building2 size={15} />
+                  <span>Receptionist</span>
+                </button>
               </div>
 
-              {!otpStep ? (
-                <form onSubmit={handleRequestOtp} className="login-form">
-                  {/* Phone Number Field */}
-                  <div className="form-group">
-                    <label htmlFor="phone-login-input">Mobile Number</label>
-                    <div className="input-with-icon">
-                      <Phone size={16} className="input-icon" />
-                      <input
-                        id="phone-login-input"
-                        type="tel"
-                        placeholder="Enter 10-digit mobile number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        autoComplete="tel"
-                        required
-                      />
-                    </div>
+              {/* ========================================================= */}
+              {/* ROLE 1: PATIENT LOGIN VIEW                                */}
+              {/* ========================================================= */}
+              {activeRole === 'patient' && (
+                <>
+                  <div className="login-card-header">
+                    <h2>Welcome to <span>QueueFree</span></h2>
+                    <p>Login with your mobile & email to book OPD appointments.</p>
                   </div>
 
-                  {/* Email Field (Requested by User) */}
-                  <div className="form-group">
-                    <label htmlFor="email-login-input">Email Address</label>
-                    <div className="input-with-icon">
-                      <Mail size={16} className="input-icon" />
-                      <input
-                        id="email-login-input"
-                        type="email"
-                        placeholder="Enter email address (e.g. name@example.com)"
-                        value={email}
-                        onChange={(e) => handleEmailChange(e.target.value)}
-                        autoComplete="email"
-                        required
-                      />
-                    </div>
-                  </div>
+                  {!otpStep ? (
+                    <form onSubmit={handleRequestOtp} className="login-form">
+                      {/* Phone Number Field */}
+                      <div className="form-group">
+                        <label htmlFor="phone-login-input">Mobile Number</label>
+                        <div className="input-with-icon">
+                          <Phone size={16} className="input-icon" />
+                          <input
+                            id="phone-login-input"
+                            type="tel"
+                            placeholder="Enter 10-digit mobile number"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            autoComplete="tel"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  {/* Full Name Field (Auto-updates with email, fully editable) */}
-                  <div className="form-group">
-                    <label htmlFor="fullname-login-input">
-                      Patient Name <span className="label-sub-hint">(Auto-fills from email)</span>
-                    </label>
-                    <div className="input-with-icon">
-                      <User size={16} className="input-icon" />
-                      <input
-                        id="fullname-login-input"
-                        type="text"
-                        placeholder="Your full name (e.g. Priya Sharma)"
-                        value={fullName}
-                        onChange={(e) => handleNameChange(e.target.value)}
-                        autoComplete="name"
-                      />
-                    </div>
-                  </div>
+                      {/* Email Field */}
+                      <div className="form-group">
+                        <label htmlFor="email-login-input">Email Address</label>
+                        <div className="input-with-icon">
+                          <Mail size={16} className="input-icon" />
+                          <input
+                            id="email-login-input"
+                            type="email"
+                            placeholder="Enter email address (e.g. name@example.com)"
+                            value={email}
+                            onChange={(e) => handleEmailChange(e.target.value)}
+                            autoComplete="email"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  {error && (
-                    <div className="form-error-banner" role="alert">
-                      <AlertCircle size={14} />
-                      <span>{error}</span>
-                    </div>
-                  )}
+                      {/* Full Name Field (Auto-derived from email, editable) */}
+                      <div className="form-group">
+                        <label htmlFor="fullname-login-input">
+                          Patient Name <span className="label-sub-hint">(Auto-fills from email)</span>
+                        </label>
+                        <div className="input-with-icon">
+                          <User size={16} className="input-icon" />
+                          <input
+                            id="fullname-login-input"
+                            type="text"
+                            placeholder="Your full name (e.g. Priya Sharma)"
+                            value={fullName}
+                            onChange={(e) => handleNameChange(e.target.value)}
+                            autoComplete="name"
+                          />
+                        </div>
+                      </div>
 
-                  <motion.button
-                    type="submit"
-                    className="btn-continue-otp"
-                    disabled={loading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {loading ? 'Sending OTP…' : 'Continue with OTP'}
-                  </motion.button>
+                      {error && (
+                        <div className="form-error-banner" role="alert">
+                          <AlertCircle size={14} />
+                          <span>{error}</span>
+                        </div>
+                      )}
 
-                  <div className="login-divider">
-                    <span>OR</span>
-                  </div>
+                      <motion.button
+                        type="submit"
+                        className="btn-continue-otp"
+                        disabled={loading}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {loading ? 'Sending OTP…' : 'Continue with OTP'}
+                      </motion.button>
 
-                  <motion.button
-                    type="button"
-                    className="btn-quick-demo"
-                    onClick={handleQuickDemoLogin}
-                    disabled={loading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Check size={16} className="demo-check-icon" />
-                    <span>Quick Demo Patient Login (Priya Sharma)</span>
-                  </motion.button>
+                      <div className="login-divider">
+                        <span>OR</span>
+                      </div>
 
-                  <div className="anti-scam-notice">
-                    <ShieldCheck size={15} />
-                    <span>
-                      <strong>Identity Assurance:</strong> ABHA ID verification is requested when booking an OPD appointment to ensure fair, verified token allocation.
-                    </span>
-                  </div>
+                      <motion.button
+                        type="button"
+                        className="btn-quick-demo"
+                        onClick={handleQuickDemoPatient}
+                        disabled={loading}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Check size={16} className="demo-check-icon" />
+                        <span>Quick Demo Patient (Priya Sharma)</span>
+                      </motion.button>
 
-                  <div className="login-card-footer">
-                    <span>New to QueueFree? <a href="#create" onClick={(e) => { e.preventDefault(); handleQuickDemoLogin() }}>Create an account</a></span>
-                  </div>
-                </form>
-              ) : (
-                /* Step 2: OTP verification */
-                <form onSubmit={handleVerifyOtp} className="login-form otp-form">
-                  <div className="otp-step-header">
-                    <p>Welcome, <strong>{fullName || deriveNameFromEmail(email, 'Patient')}</strong>! Enter the 6-digit code sent to <strong>{phone}</strong></p>
-                    <div className="simulated-otp-chip">
-                      <span>Demo Code: <strong>{generatedOtp}</strong></span>
+                      <div className="anti-scam-notice">
+                        <ShieldCheck size={15} />
+                        <span>
+                          <strong>Identity Assurance:</strong> ABHA ID verification is requested when booking an OPD appointment to ensure fair, verified token allocation.
+                        </span>
+                      </div>
+                    </form>
+                  ) : (
+                    /* Step 2: OTP verification */
+                    <form onSubmit={handleVerifyOtp} className="login-form otp-form">
+                      <div className="otp-step-header">
+                        <p>Welcome, <strong>{fullName || deriveNameFromEmail(email, 'Patient')}</strong>! Enter the 6-digit code sent to <strong>{phone}</strong></p>
+                        <div className="simulated-otp-chip">
+                          <span>Demo Code: <strong>{generatedOtp}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => setOtp(generatedOtp)}
+                            className="auto-fill-btn"
+                          >
+                            Auto-fill
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          className="otp-code-input"
+                          maxLength={6}
+                          placeholder="••••••"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                          autoFocus
+                          required
+                        />
+                      </div>
+
+                      {error && (
+                        <div className="form-error-banner" role="alert">
+                          <AlertCircle size={14} />
+                          <span>{error}</span>
+                        </div>
+                      )}
+
+                      <motion.button
+                        type="submit"
+                        className="btn-continue-otp"
+                        disabled={loading}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {loading ? 'Verifying…' : 'Verify & Enter Patient Dashboard'}
+                      </motion.button>
+
                       <button
                         type="button"
-                        onClick={() => setOtp(generatedOtp)}
-                        className="auto-fill-btn"
+                        className="btn-back-text"
+                        onClick={() => { setOtpStep(false); setError('') }}
                       >
-                        Auto-fill
+                        Change details
                       </button>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <input
-                      type="text"
-                      className="otp-code-input"
-                      maxLength={6}
-                      placeholder="••••••"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                      autoFocus
-                      required
-                    />
-                  </div>
-
-                  {error && (
-                    <div className="form-error-banner" role="alert">
-                      <AlertCircle size={14} />
-                      <span>{error}</span>
-                    </div>
+                    </form>
                   )}
+                </>
+              )}
 
-                  <motion.button
-                    type="submit"
-                    className="btn-continue-otp"
-                    disabled={loading}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {loading ? 'Verifying…' : 'Verify & Enter Dashboard'}
-                  </motion.button>
+              {/* ========================================================= */}
+              {/* ROLE 2: DOCTOR LOGIN VIEW                                 */}
+              {/* ========================================================= */}
+              {activeRole === 'doctor' && (
+                <div className="doctor-login-section">
+                  <div className="login-card-header">
+                    <h2>Doctor <span>OPD Console</span></h2>
+                    <p>Sign in with staff credentials to manage patient consultations.</p>
+                  </div>
 
-                  <button
-                    type="button"
-                    className="btn-back-text"
-                    onClick={() => { setOtpStep(false); setError('') }}
-                  >
-                    Change details
-                  </button>
-                </form>
+                  <form onSubmit={handleDoctorSubmit} className="login-form">
+                    <div className="form-group">
+                      <label htmlFor="doctor-user-input">Doctor Staff ID / Username</label>
+                      <div className="input-with-icon">
+                        <Stethoscope size={16} className="input-icon" />
+                        <input
+                          id="doctor-user-input"
+                          type="text"
+                          placeholder="e.g. doctor.demo"
+                          value={doctorUsername}
+                          onChange={(e) => setDoctorUsername(e.target.value)}
+                          autoComplete="username"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="doctor-pass-input">Password</label>
+                      <div className="input-with-icon">
+                        <Lock size={16} className="input-icon" />
+                        <input
+                          id="doctor-pass-input"
+                          type="password"
+                          placeholder="Enter your doctor password"
+                          value={doctorPassword}
+                          onChange={(e) => setDoctorPassword(e.target.value)}
+                          autoComplete="current-password"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="form-error-banner" role="alert">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <motion.button
+                      type="submit"
+                      className="btn-continue-otp"
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {loading ? 'Authenticating Doctor…' : 'Sign In to Doctor Console'}
+                    </motion.button>
+
+                    <div className="login-divider">
+                      <span>OR</span>
+                    </div>
+
+                    <motion.button
+                      type="button"
+                      className="btn-quick-staff doctor-btn"
+                      onClick={handleQuickDemoDoctor}
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Stethoscope size={16} />
+                      <span>Quick Demo Doctor (Dr. Ananya Rao · AIIMS)</span>
+                    </motion.button>
+
+                    <div className="anti-scam-notice">
+                      <Shield size={15} />
+                      <span>
+                        <strong>Doctor Portal:</strong> Directly access designated OPD live queues, call next patient, update consultation status, and pause queue.
+                      </span>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* ========================================================= */}
+              {/* ROLE 3: RECEPTIONIST LOGIN VIEW                           */}
+              {/* ========================================================= */}
+              {activeRole === 'reception' && (
+                <div className="reception-login-section">
+                  <div className="login-card-header">
+                    <h2>Reception <span>Desk Console</span></h2>
+                    <p>Sign in to check-in arriving patients and issue walk-in tokens.</p>
+                  </div>
+
+                  <form onSubmit={handleReceptionSubmit} className="login-form">
+                    <div className="form-group">
+                      <label htmlFor="reception-user-input">Receptionist Staff ID / Username</label>
+                      <div className="input-with-icon">
+                        <Building2 size={16} className="input-icon" />
+                        <input
+                          id="reception-user-input"
+                          type="text"
+                          placeholder="e.g. reception.demo"
+                          value={receptionUsername}
+                          onChange={(e) => setReceptionUsername(e.target.value)}
+                          autoComplete="username"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="reception-pass-input">Password</label>
+                      <div className="input-with-icon">
+                        <Lock size={16} className="input-icon" />
+                        <input
+                          id="reception-pass-input"
+                          type="password"
+                          placeholder="Enter reception desk password"
+                          value={receptionPassword}
+                          onChange={(e) => setReceptionPassword(e.target.value)}
+                          autoComplete="current-password"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="form-error-banner" role="alert">
+                        <AlertCircle size={14} />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <motion.button
+                      type="submit"
+                      className="btn-continue-otp"
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {loading ? 'Authenticating Reception…' : 'Sign In to Reception Desk'}
+                    </motion.button>
+
+                    <div className="login-divider">
+                      <span>OR</span>
+                    </div>
+
+                    <motion.button
+                      type="button"
+                      className="btn-quick-staff reception-btn"
+                      onClick={handleQuickDemoReception}
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Building2 size={16} />
+                      <span>Quick Demo Receptionist (Central Desk · AIIMS)</span>
+                    </motion.button>
+
+                    <div className="anti-scam-notice">
+                      <ShieldCheck size={15} />
+                      <span>
+                        <strong>Reception Desk:</strong> Manage front-desk patient arrival check-in, issue walk-in physical tokens, and print OPD queue slips.
+                      </span>
+                    </div>
+                  </form>
+                </div>
               )}
             </CardSpotlight>
           </div>

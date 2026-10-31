@@ -437,6 +437,96 @@ body {
   position: relative;
 }
 
+/* Role Selector Tabs (Patient, Doctor, Receptionist) */
+.login-role-tabs {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line-border);
+  gap: 4px;
+}
+
+.login-role-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.login-role-tab:hover {
+  color: var(--text-dark);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.login-role-tab.active {
+  background: white;
+  color: var(--primary-blue);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.login-role-tab.active.doctor-tab {
+  color: #0284c7;
+}
+
+.login-role-tab.active.reception-tab {
+  color: #4f46e5;
+}
+
+.btn-quick-staff {
+  width: 100%;
+  height: 44px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-quick-staff:hover {
+  background: #dcfce7;
+}
+
+.btn-quick-staff.doctor-btn {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.btn-quick-staff.doctor-btn:hover {
+  background: #e0f2fe;
+}
+
+.btn-quick-staff.reception-btn {
+  background: #f5f3ff;
+  color: #5b21b6;
+  border-color: #ddd6fe;
+}
+
+.btn-quick-staff.reception-btn:hover {
+  background: #ede9fe;
+}
+
 .login-card-header h2 {
   font-size: 24px;
   font-weight: 800;
